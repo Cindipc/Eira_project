@@ -24,6 +24,8 @@ namespace EiraGame
         bool awarded;
         bool gaveDamage;
         Vector3 moveDir;
+        Vector3 knock;
+        float stunTimer;
 
         public bool IsChasing => chasing;
 
@@ -45,6 +47,14 @@ namespace EiraGame
             var desired = GetDesiredPosition(player);
 
             transform.position = Vector3.MoveTowards(transform.position, desired, GetSpeed(player) * Time.deltaTime);
+
+            // retroceso del pulso defensivo de Eira
+            if (knock.sqrMagnitude > 0.0004f)
+            {
+                transform.position += knock * Time.deltaTime;
+                knock = Vector3.MoveTowards(knock, Vector3.zero, 6f * Time.deltaTime);
+            }
+            stunTimer = Mathf.Max(0f, stunTimer - Time.deltaTime);
 
             // orientación visual
             var v = desired - transform.position;
@@ -84,8 +94,8 @@ namespace EiraGame
                 }
             }
 
-            // ataque
-            if (hDist < attackRange && player.PlayerState == EiraGame.GameState.Playing)
+            // ataque (suspendido mientras dura el aturdimiento del pulso defensivo)
+            if (stunTimer <= 0f && hDist < attackRange && player.PlayerState == EiraGame.GameState.Playing)
             {
                 attackTimer -= Time.deltaTime;
                 if (attackTimer <= 0f)
@@ -117,6 +127,17 @@ namespace EiraGame
         }
 
         float GetSpeed(PlayerController player) => chasing ? chaseSpeed : patrolSpeed;
+
+        // Empuja el drón lejos de Eira y lo aturde un instante para que no ataque.
+        public void OnDefensePulse(Vector3 origin)
+        {
+            var away = transform.position - origin;
+            away.y = 0f;
+            if (away.sqrMagnitude < 0.01f) away = Vector3.back;
+            knock = away.normalized * 9f;
+            stunTimer = 1.4f;
+            chasing = false;
+        }
 
         bool HasLoS(PlayerController player)
         {

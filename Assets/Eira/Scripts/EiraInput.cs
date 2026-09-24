@@ -29,7 +29,7 @@ namespace EiraGame
             {
                 float x = 0f, y = 0f;
                 if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) x += 1f;
-                if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) x -= 1f;
+                if (Keyboard.current.leftArrowKey.isPressed) x -= 1f;
                 if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) y += 1f;
                 if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) y -= 1f;
                 return new Vector2(x, y).normalized;
@@ -63,8 +63,8 @@ namespace EiraGame
 
         public static bool AbilityDown()
         {
-            if (HasKeyboard) return Keyboard.current.fKey.wasPressedThisFrame;
-            return Input.GetKeyDown(KeyCode.F);
+            if (HasKeyboard) return Keyboard.current.aKey.wasPressedThisFrame;
+            return Input.GetKeyDown(KeyCode.A);
         }
 
         public static bool AdvanceDown()

@@ -2,14 +2,14 @@ using UnityEngine;
 
 namespace EiraGame
 {
-    // Cámara en tercera persona: orbita alrededor de Eira con el mouse.
+    // Cámara en tercera persona: va detrás de la espalda de Eira y orbita con el mouse.
     public class FollowCamera : MonoBehaviour
     {
         public float distance = 3.4f;
         public float height = 1.15f;
         public float sensitivity = 0.08f;
         public float yaw = 0f;
-        public float pitch = 12f;
+        public float pitch = 15f;
         public float minPitch = -25f;
         public float maxPitch = 60f;
         public Camera cam;
@@ -32,7 +32,8 @@ namespace EiraGame
                 GameManager.Instance.CameraYaw = yaw;
 
             var pivot = target.transform.position + Vector3.up * height;
-            var desired = pivot + Quaternion.Euler(pitch, yaw, 0f) * (Vector3.forward * distance);
+            // La cámara se coloca DETRÁS de Eira: el offset usa -forward, así miramos su espalda.
+            var desired = pivot + Quaternion.Euler(pitch, yaw, 0f) * (Vector3.back * distance);
 
             // evitar atravesar paredes
             if (Physics.Raycast(pivot, (desired - pivot).normalized, out var hit, distance))

@@ -1277,7 +1277,7 @@ Transform:
   m_GameObject: {fileID: 84357265}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.07, z: 0}
+  m_LocalPosition: {x: 0, y: 0.09, z: 0}
   m_LocalScale: {x: 10.4, y: 1, z: 6.6}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8304,7 +8304,7 @@ Transform:
   m_GameObject: {fileID: 665868005}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.364, y: 0.274, z: 1.471}
+  m_LocalPosition: {x: 15.429, y: 0.15, z: -1.035}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -11273,7 +11273,7 @@ MonoBehaviour:
   height: 1.15
   sensitivity: 0.08
   yaw: 0
-  pitch: 12
+  pitch: 15
   minPitch: -25
   maxPitch: 60
   cam: {fileID: 870568443}

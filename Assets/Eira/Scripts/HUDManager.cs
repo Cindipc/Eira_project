@@ -191,7 +191,7 @@ namespace EiraGame
             rt.anchoredPosition = pos;
             rt.sizeDelta = size;
             bg.GetComponent<Image>().color = new Color(0.08f, 0.08f, 0.1f, 0.9f);
-            var fgo = new GameObject("Fill", typeof(Image), typeof(RectTransform));
+            var fgo = new GameObject(bg.name + "Fill", typeof(Image));
             fgo.transform.SetParent(bg.transform, false);
             var frt = fgo.GetComponent<RectTransform>();
             frt.anchorMin = Vector2.zero; frt.anchorMax = Vector2.one;

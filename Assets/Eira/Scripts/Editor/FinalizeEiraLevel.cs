@@ -14,14 +14,14 @@ namespace EiraGame.Editor
     //  4) Guarda la escena y loguea un resumen.
     public static class FinalizeEiraLevel
     {
-        const string ObjPath = @"C:\Users\Usuario\Downloads\base.obj";
+        const string ObjPath = @"C:\Users\Usuario\Downloads\eira_para_mixamo_limpio.obj";
         const string Folder = "Assets/Eira/Environment/CharacterMeshes";
         const string MeshPath = Folder + "/EiraMesh.asset";
         const string MatPath = Folder + "/EiraVertexColor.mat";
         const string ScenePath = "Assets/Eira/Scenes/Level1Scene.unity";
-        const float FillFloorY = 0.07f;          // nivel de la arena en coords de escena
+        const float FillFloorY = 0.09f;         // nivel del piso del escenario en coords de escena (igual a BaseY)
         const float MapScale = 0.1574658f;
-        const float BaseY = 0.09f;               // y del suelo del mapa en mundo (esc y=-0.5 + local 0.59)
+        const float BaseY = 0.09f;              // y del suelo del mapa en mundo (esc y=-0.5 + local 0.59)
 
         [MenuItem("Eira/Finalize Level")]
         public static void Do()
@@ -178,6 +178,7 @@ namespace EiraGame.Editor
                         if (!ok) continue;
 
                         int baseCount = vi.Length;
+                        int vertBase = outP.Count;
                         for (int k = 0; k < baseCount; k++)
                         {
                             int v = vi[k] - 1;
@@ -198,9 +199,9 @@ namespace EiraGame.Editor
                         }
                         for (int k = 1; k + 1 < baseCount; k++)
                         {
-                            outI.Add(baseCount * 0 + (k + 1));
-                            outI.Add(baseCount * 0 + k);
-                            outI.Add(baseCount * 0 + 0);
+                            outI.Add(vertBase + 0);
+                            outI.Add(vertBase + k);
+                            outI.Add(vertBase + k + 1);
                         }
                         faceCount++;
                     }

@@ -61,6 +61,86 @@ namespace EiraGame
             }
         }
 
+        // Rebusca las partes del visual (legL/legR/armL/armR/torso/head) si aún no se
+        // han cacheado, p.ej. cuando el modelo nativo se construye después de Awake.
+        public void RefreshBones()
+        {
+            if (visual == null) return;
+            if (legL == null) legL = visual.Find("legL");
+            if (legR == null) legR = visual.Find("legR");
+            if (armL == null) armL = visual.Find("armL");
+            if (armR == null) armR = visual.Find("armR");
+            if (torso == null) torso = visual.Find("torso");
+            if (head == null) head = visual.Find("head");
+        }
+
+        // Desplazamientos (en espiral) para buscar un punto de apoyo libre cerca del spawn.
+        static readonly Vector2[] EscapeOffsets =
+        {
+            Vector2.zero,
+            new Vector2(1f, 0f), new Vector2(-1f, 0f), new Vector2(0f, 1f), new Vector2(0f, -1f),
+            new Vector2(1.5f, 1.5f), new Vector2(-1.5f, 1.5f), new Vector2(1.5f, -1.5f), new Vector2(-1.5f, -1.5f),
+            new Vector2(3f, 0f), new Vector2(-3f, 0f), new Vector2(0f, 3f), new Vector2(0f, -3f),
+            new Vector2(3f, 3f), new Vector2(-3f, 3f), new Vector2(3f, -3f), new Vector2(-3f, -3f),
+        };
+
+        void Start()
+        {
+            LandOnFloor();
+        }
+
+        // Evita nacer atascado dentro de la geometría del escenario: baja hasta el suelo
+        // y, si sigue dentro de una pared, se desplaza en espiral hasta hallar un punto libre.
+        public void LandOnFloor()
+        {
+            if (cc == null) cc = GetComponent<CharacterController>();
+            var start = transform.position;
+            cc.enabled = false;
+
+            for (int i = 0; i < EscapeOffsets.Length; i++)
+            {
+                var p = start + new Vector3(EscapeOffsets[i].x, 0f, EscapeOffsets[i].y);
+                if (!DropToTopSurface(ref p)) continue;
+                transform.position = p;
+                if (!OverlapsSolid(p))
+                {
+                    cc.enabled = true;
+                    return;
+                }
+            }
+
+            // plan B: subir hasta salir de la pared y apoyarse arriba (podrá saltar al suelo)
+            for (int i = 0; i < 30 && OverlapsSolid(transform.position); i++)
+                transform.position += Vector3.up * 0.4f;
+            var pos = transform.position;
+            if (DropToTopSurface(ref pos)) transform.position = pos;
+            cc.enabled = true;
+        }
+
+        bool DropToTopSurface(ref Vector3 p)
+        {
+            if (Physics.Raycast(p + Vector3.up * 25f, Vector3.down, out var hit, 60f, ~0, QueryTriggerInteraction.Ignore))
+            {
+                p = new Vector3(p.x, hit.point.y + 0.03f, p.z);
+                return true;
+            }
+            return false;
+        }
+
+        bool OverlapsSolid(Vector3 p)
+        {
+            float r = Mathf.Max(0.05f, cc.radius * 0.9f);
+            float halfH = Mathf.Max(0.05f, cc.height * 0.5f - cc.radius);
+            var c = p + cc.center;
+            foreach (var col in Physics.OverlapCapsule(c - Vector3.up * halfH, c + Vector3.up * halfH, r))
+            {
+                if (col == null || col.isTrigger) continue;
+                if (col.transform == transform || col.transform.IsChildOf(transform)) continue;
+                return true;
+            }
+            return false;
+        }
+
         public void RespawnAt(Vector3 pos, Quaternion rot)
         {
             cc.enabled = false;
@@ -71,10 +151,12 @@ namespace EiraGame
             Health = EiraConst.MaxHealth;
             invuln = 2.2f;
             heart = Mathf.Max(heart, EiraConst.MaxHeart * 0.5f);
+            LandOnFloor();
         }
 
         void Update()
         {
+            RefreshBones();
             invuln = Mathf.Max(0f, invuln - Time.deltaTime);
 
             if (PlayerState == GameState.Playing)
@@ -223,6 +305,25 @@ namespace EiraGame
             {
                 var it = c.GetComponent<Interactable>();
                 if (it != null) it.OnAbilityPulse(this);
+            }
+
+            // defensa: el pulso aleja a los androides (drones) cercanos
+            bool repelled = false;
+            var pulseCenter = transform.position + Vector3.up * 1f;
+            var drones = UnityEngine.Object.FindObjectsOfType<DroneController>();
+            foreach (var drone in drones)
+            {
+                if (drone == null) continue;
+                if (Vector3.Distance(pulseCenter, drone.transform.position) <= abilityRadius)
+                {
+                    drone.OnDefensePulse(transform.position);
+                    repelled = true;
+                }
+            }
+            if (repelled)
+            {
+                GameManager.Instance?.AddScore(Points.AvoidEnemy);
+                GameEvents.Subtitle("Pulso defensivo: dron repelido. +" + Points.AvoidEnemy, 1.8f);
             }
         }
 

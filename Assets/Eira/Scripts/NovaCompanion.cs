@@ -69,7 +69,8 @@ namespace EiraGame
             player = GameManager.Instance != null ? GameManager.Instance.Player : null;
             if (player == null) return;
 
-            var offset = -player.transform.forward * 2.0f + player.transform.right * 0.7f;
+            // NOVA camina al lado de Eira (no frente a la cámara, que va detrás de la espalda).
+            var offset = -player.transform.forward * 0.6f + player.transform.right * 1.9f;
             offset.y = 0f;
             var target = player.transform.position + offset;
             var move = Vector3.Lerp(transform.position, target, 3.2f * Time.deltaTime);

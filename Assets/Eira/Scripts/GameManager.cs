@@ -43,6 +43,8 @@ namespace EiraGame
             InfoCollectedCount = 0;
             player = FindObjectOfType<PlayerController>();
             nova = FindObjectOfType<NovaCompanion>();
+            if (player != null)
+                EiraModelo.EnsureNativa(player.visual, MakeLit);
             checkpoint = player != null ? player.transform.position : Vector3.zero;
             checkpointRot = player != null ? player.transform.rotation : Quaternion.identity;
 
@@ -50,6 +52,19 @@ namespace EiraGame
             EnsureHud();
 
             SetObjective(Missions.Names[Missions.MWake]);
+        }
+
+        // Materiales lit de runtime (sin AssetDatabase) para el modelo nativo de Eira.
+        static Material MakeLit(Color c)
+        {
+            var sh = Shader.Find("Standard");
+            if (sh == null) sh = Shader.Find("Universal Render Pipeline/Lit");
+            if (sh == null) sh = Shader.Find("Sprites/Default");
+            var m = new Material(sh);
+            m.name = "EiraNativa_" + c;
+            m.color = c;
+            if (m.HasProperty("_Glossiness")) m.SetFloat("_Glossiness", 0.12f);
+            return m;
         }
 
         void EnsureHud()
