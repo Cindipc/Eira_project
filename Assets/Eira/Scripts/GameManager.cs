@@ -18,6 +18,9 @@ namespace EiraGame
         public float PlayerHealth => player != null ? player.Health : 0f;
         public float PlayerHeart => player != null ? player.HeartFrac : 0f;
 
+        /// <summary>Director de misiones (waypoints y guia de Nova). Opcional.</summary>
+        public MissionDirector missionDirector;
+
         PlayerController player;
         NovaCompanion nova;
         public HUDManager hud;
@@ -33,25 +36,99 @@ namespace EiraGame
         public int PuzzlePanelsCharged => puzzlePanelsCharged;
         public int BossTerminalsCharged => bossTerminalsCharged;
 
+        /// <summary>Drones que Eira ha derribado con el arma.</summary>
+        public int DronesDestroyed { get; private set; }
+
+        /// <summary>Drones que quedaban vivos en el nivel al empezar.</summary>
+        public int DronesAlive { get; private set; }
+
         void Awake()
         {
             Instance = this;
+
             GameEvents.ResetAll();
+
             State = GameState.Playing;
             Lives = EiraConst.MaxLives;
             Score = 0;
             InfoCollectedCount = 0;
+
             player = FindObjectOfType<PlayerController>();
             nova = FindObjectOfType<NovaCompanion>();
+            DronesAlive = FindObjectsOfType<DroneController>().Length;
+
             if (player != null)
-                EiraModelo.EnsureNativa(player.visual, MakeLit);
+            {
+                Debug.Log(
+                    "PLAYER ENCONTRADO: " +
+                    player.gameObject.name +
+                    " | POSICIÓN: " +
+                    player.transform.position
+                );
+            }
+            else
+            {
+                Debug.LogError("NO SE ENCONTRÓ NINGÚN PlayerController");
+            }
+
             checkpoint = player != null ? player.transform.position : Vector3.zero;
             checkpointRot = player != null ? player.transform.rotation : Quaternion.identity;
 
+            // La cámara publica su yaw cada LateUpdate, pero hay que darle
+            // un valor inicial coherente: si se queda en 0, el primer frame
+            // Eira se movería en una dirección que el jugador no ve.
+            CameraYaw = checkpointRot.eulerAngles.y;
+
             AudioFX.Init();
+
             EnsureHud();
+            EnsureMissionDirector();
+            EnsureEnvironmentDressing();
 
             SetObjective(Missions.Names[Missions.MWake]);
+        }
+
+        /// <summary>
+        /// El director de misiones y la ambientación se crean en runtime si
+        /// no están en la escena. Así la guía de Nova y el aspecto futurista
+        /// funcionan aunque el nivel se haya guardado sin ellos, sin depender
+        /// de editar la escena a mano (que además se perdería al reabrirla).
+        /// </summary>
+        private void EnsureMissionDirector()
+        {
+            missionDirector = FindObjectOfType<MissionDirector>();
+
+            if (missionDirector != null)
+                return;
+
+            var go = new GameObject("MissionDirector");
+            missionDirector = go.AddComponent<MissionDirector>();
+        }
+
+        private void EnsureEnvironmentDressing()
+        {
+            if (FindObjectOfType<EnvironmentDressing>() != null)
+                return;
+
+            var go = new GameObject("EnvironmentDressing");
+            go.AddComponent<EnvironmentDressing>();
+        }
+
+        void Start()
+        {
+            // El checkpoint inicial se toma DESPUÉS de que PlayerController
+            // haya asentado a Eira en el suelo, no en su posición de escena
+            // (que puede estar flotando sobre una plataforma).
+            if (player != null)
+            {
+                checkpoint = player.transform.position;
+                checkpointRot = player.transform.rotation;
+                CameraYaw = checkpointRot.eulerAngles.y;
+            }
+
+            // Sin cursor capturado la cámara no se puede girar.
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
 
         // Materiales lit de runtime (sin AssetDatabase) para el modelo nativo de Eira.
@@ -81,6 +158,42 @@ namespace EiraGame
         public void SetObjective(string s)
         {
             GameEvents.Objective(s);
+        }
+
+        // -------- pausa --------
+        public bool IsPaused => State == GameState.Paused;
+
+        public void TogglePause()
+        {
+            // Solo se puede pausar durante el juego: en victoria o derrota
+            // los paneles finales ya ocupan la pantalla.
+            if (State != GameState.Playing && State != GameState.Paused)
+                return;
+
+            bool paused = State != GameState.Paused;
+
+            State = paused ? GameState.Paused : GameState.Playing;
+
+            Time.timeScale = paused ? 0f : 1f;
+
+            if (paused)
+                Cursor.lockState = CursorLockMode.None;
+            else
+                Cursor.lockState = CursorLockMode.Locked;
+
+            if (hud != null)
+                hud.SetPaused(paused);
+        }
+
+        public void RestartLevel()
+        {
+            Time.timeScale = 1f;
+            State = GameState.Playing;
+
+            if (hud != null)
+                hud.SetPaused(false);
+
+            UnityEngine.SceneManagement.SceneManager.LoadScene(EiraConst.Level1Scene);
         }
 
         public void AddScore(int amount)
@@ -143,6 +256,23 @@ namespace EiraGame
         {
             AddScore(Points.AvoidEnemy);
             GameEvents.Subtitle("Enemigo evadido +" + Points.AvoidEnemy, 1.8f);
+        }
+
+        /// <summary>
+        /// Un dron ha sido destruido con un disparo. Se avisa a NOVA y se
+        /// suman los puntos; el dron ya se ha desactivado él mismo.
+        /// </summary>
+        public void OnDroneDestroyed(DroneController drone, int points, Transform shooter)
+        {
+            DronesDestroyed++;
+
+            if (points > 0)
+                AddScore(points);
+
+            if (drone != null)
+                DronesAlive = Mathf.Max(0, DronesAlive - 1);
+
+            GameEvents.DroneDestroyed(points);
         }
 
         // -------- salud / corazón --------

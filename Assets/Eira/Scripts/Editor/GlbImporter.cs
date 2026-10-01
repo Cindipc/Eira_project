@@ -158,7 +158,7 @@ namespace EiraGame.Editor
                     }
                     var t = node["translation"]; var r = node["rotation"]; var s = node["scale"];
                     Vector3 pos = t is JArray ta && ta.Count >= 3 ? new Vector3((float)ta[0], (float)ta[1], (float)ta[2]) : Vector3.zero;
-                    Quaternion rot = r is JArray ra && ra.Count >= 4 ? new Quaternion((float)ra[0], (float)ra[1], (float)ra[2], (float)ra[3]) : Quaternion.identity;
+                    Quaternion rot = r is JArray ra && ra.Count >= 4 ? GlbTransformUtil.FromGltf(new[] { (float)ra[0], (float)ra[1], (float)ra[2], (float)ra[3] }) : Quaternion.identity;
                     Vector3 sc = s is JArray sa && sa.Count >= 3 ? new Vector3((float)sa[0], (float)sa[1], (float)sa[2]) : Vector3.one;
                     return Matrix4x4.TRS(pos, rot, sc);
                 }

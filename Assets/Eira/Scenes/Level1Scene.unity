@@ -5394,6 +5394,7 @@ GameObject:
   m_Component:
   - component: {fileID: 189963486}
   - component: {fileID: 189963485}
+  - component: {fileID: 189963487}
   m_Layer: 0
   m_Name: WarmSpawn
   m_TagString: Untagged
@@ -5481,6 +5482,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &189963487
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 189963484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!1 &191481042
 GameObject:
   m_ObjectHideFlags: 0
@@ -6770,6 +6800,97 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 235685721}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1001 &238131163
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1475229219}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 3.9
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -1.13
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -1302721226044453372, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.65
+      objectReference: {fileID: 0}
+    - target: {fileID: -1302721226044453372, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 2.95
+      objectReference: {fileID: 0}
+    - target: {fileID: -1302721226044453372, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.14
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_Name
+      value: EiraBase
+      objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: ce52297769cd1de41a2814dcea91a658, type: 2}
+    - target: {fileID: 5866666021909216657, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_CullingMode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+--- !u!4 &238131164 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+  m_PrefabInstance: {fileID: 238131163}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &238131165 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 0b4ebfc37cc42734daec84c0e283f227, type: 3}
+  m_PrefabInstance: {fileID: 238131163}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &239369906
 GameObject:
   m_ObjectHideFlags: 0
@@ -6811,6 +6932,7 @@ GameObject:
   m_Component:
   - component: {fileID: 251597191}
   - component: {fileID: 251597190}
+  - component: {fileID: 251597192}
   m_Layer: 0
   m_Name: CoolCorridor
   m_TagString: Untagged
@@ -6898,6 +7020,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &251597192
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 251597189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!1 &258983954
 GameObject:
   m_ObjectHideFlags: 0
@@ -10084,6 +10235,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5eb3d45065404dc489681f69035645f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EiraGame.DroneController
+  maxHealth: 40
+  scoreOnDestroy: 150
   patrolNodes:
   - {x: 55, y: 1.7, z: -8}
   - {x: 63, y: 1.7, z: -8}
@@ -14345,6 +14498,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5eb3d45065404dc489681f69035645f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EiraGame.DroneController
+  maxHealth: 40
+  scoreOnDestroy: 150
   patrolNodes:
   - {x: 32, y: 2, z: 5}
   - {x: 40, y: 2, z: 5}
@@ -15642,6 +15797,10 @@ MonoBehaviour:
   promptText: Interactuar
   kind: 0
   amount: 50
+  bob: 1
+  bobHeight: 0.12
+  bobSpeed: 1.8
+  glow: 1
 --- !u!135 &589757041
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -18005,95 +18164,6 @@ Material:
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
---- !u!1 &665868005
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 665868008}
-  - component: {fileID: 665868007}
-  - component: {fileID: 665868006}
-  m_Layer: 0
-  m_Name: Eira
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &665868006
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 665868005}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3870adfa55c74e2478fd9d574c88ca03, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EiraGame.PlayerController
-  walkSpeed: 3.6
-  runSpeed: 6.2
-  crouchSpeed: 1.7
-  jumpVelocity: 6.2
-  gravity: 20
-  abilityRadius: 4.6
-  abilityCost: 12
-  heartRegen: 1.6
-  heartDanger: 15
-  pulseInterval: 0.35
-  visual: {fileID: 2028942438}
-  legL: {fileID: 0}
-  legR: {fileID: 0}
-  armL: {fileID: 0}
-  armR: {fileID: 0}
-  torso: {fileID: 0}
-  head: {fileID: 0}
-  hideZoneLevel: 0
---- !u!143 &665868007
-CharacterController:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 665868005}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Height: 1.75
-  m_Radius: 0.4
-  m_SlopeLimit: 45
-  m_StepOffset: 0.35
-  m_SkinWidth: 0.08
-  m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0.875, z: 0}
---- !u!4 &665868008
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 665868005}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.364, y: 0.274, z: 1.471}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 2028942438}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &666195993
 GameObject:
   m_ObjectHideFlags: 0
@@ -18357,6 +18427,7 @@ GameObject:
   - component: {fileID: 671753285}
   - component: {fileID: 671753284}
   - component: {fileID: 671753283}
+  - component: {fileID: 671753286}
   m_Layer: 0
   m_Name: Object_2
   m_TagString: Untagged
@@ -18458,6 +18529,27 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 671753281}
   m_Mesh: {fileID: 4300000, guid: 1de7f2e9a09f5bc4aa7f0b61ac1967ab, type: 2}
+--- !u!65 &671753286
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 671753281}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 103.55459, y: 130.4445, z: 7.666484}
+  m_Center: {x: -61.50342, y: 25.649885, z: 7.609264}
 --- !u!1 &672637232
 GameObject:
   m_ObjectHideFlags: 0
@@ -20524,6 +20616,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5eb3d45065404dc489681f69035645f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EiraGame.DroneController
+  maxHealth: 40
+  scoreOnDestroy: 150
   patrolNodes:
   - {x: 32, y: 2, z: -5}
   - {x: 40, y: 2, z: -5}
@@ -21888,6 +21982,10 @@ MonoBehaviour:
   promptText: Interactuar
   kind: 1
   amount: 45
+  bob: 1
+  bobHeight: 0.12
+  bobSpeed: 1.8
+  glow: 1
 --- !u!135 &772761086
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -24752,35 +24850,15 @@ GameObject:
   - component: {fileID: 870568444}
   - component: {fileID: 870568443}
   - component: {fileID: 870568442}
-  - component: {fileID: 870568441}
   - component: {fileID: 870568445}
+  - component: {fileID: 870568446}
   m_Layer: 0
-  m_Name: MainCamera
-  m_TagString: MainCamera
+  m_Name: EiraCamera
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &870568441
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 870568440}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9bfda8b84ed3d64dbacfad2b0634c59, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EiraGame.FollowCamera
-  distance: 3.4
-  height: 1.15
-  sensitivity: 0.08
-  yaw: 0
-  pitch: 12
-  minPitch: -25
-  maxPitch: 60
-  cam: {fileID: 870568443}
 --- !u!81 &870568442
 AudioListener:
   m_ObjectHideFlags: 0
@@ -24848,13 +24926,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 870568440}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.3, z: -3.2}
+  m_LocalRotation: {x: -0.0437782, y: 0.7057503, z: 0.0437782, w: 0.7057503}
+  m_LocalPosition: {x: 2.435035, y: 3.1510231, z: 0.000000073760745}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -7.1, y: 90, z: 0}
 --- !u!114 &870568445
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24899,6 +24977,43 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &870568446
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 870568440}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1743aa674b0809647a0b1d8f95fdaf1c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EiraGame.ProfessionalThirdPersonCamera
+  target: {fileID: 1475229219}
+  targetHeight: 1.45
+  shoulderOffset: 0.6
+  distance: 3.6
+  minimumDistance: 0.7
+  positionSmooth: 16
+  rotationSmooth: 20
+  sensitivity: 0.1
+  pitch: 8
+  minimumPitch: -18
+  maximumPitch: 55
+  returnBehindWhenMoving: 1
+  returnBehindSpeed: 2.2
+  behindTolerance: 70
+  lookIdleBeforeReturn: 0.8
+  maxBehindStepDegrees: 90
+  baseFov: 60
+  sprintFov: 68
+  fovSmooth: 6
+  collisionRadius: 0.2
+  collisionPadding: 0.1
+  collisionSmooth: 30
+  collisionMask:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!1 &870947562
 GameObject:
   m_ObjectHideFlags: 0
@@ -32970,6 +33085,15 @@ MonoBehaviour:
   lineOnBossEnd: 
   lineOnWin: 
   sayDuration: 4
+  followDistance: 1.9
+  behindDistance: 0.6
+  followHeight: 1.1
+  followSmooth: 3.2
+  rotationSmooth: 5
+  teleportDistance: 6
+  maxSpeed: 7.5
+  avoidRadius: 0.35
+  lookAheadDistance: 3.5
 --- !u!4 &1164352826
 Transform:
   m_ObjectHideFlags: 0
@@ -32978,8 +33102,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1164352824}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.364, y: 0.274, z: -0.729}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 4.5, y: 1.2, z: -1.0999999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -33549,6 +33673,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1189192891}
   - component: {fileID: 1189192890}
+  - component: {fileID: 1189192892}
   m_Layer: 0
   m_Name: CyanPuzzle
   m_TagString: Untagged
@@ -33636,6 +33761,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1189192892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1189192889}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!1 &1189195473
 GameObject:
   m_ObjectHideFlags: 0
@@ -39402,6 +39556,10 @@ MonoBehaviour:
   promptText: Interactuar
   kind: 0
   amount: 45
+  bob: 1
+  bobHeight: 0.12
+  bobSpeed: 1.8
+  glow: 1
 --- !u!135 &1443904607
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -39523,6 +39681,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1454178204}
   - component: {fileID: 1454178203}
+  - component: {fileID: 1454178205}
   m_Layer: 0
   m_Name: SunDia
   m_TagString: Untagged
@@ -39610,6 +39769,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1454178205
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1454178202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!1 &1455857518
 GameObject:
   m_ObjectHideFlags: 0
@@ -40175,6 +40363,137 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1471983465}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1475229216
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1475229219}
+  - component: {fileID: 1475229218}
+  - component: {fileID: 1475229217}
+  - component: {fileID: 1475229220}
+  m_Layer: 0
+  m_Name: Eira
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1475229217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1475229216}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3870adfa55c74e2478fd9d574c88ca03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EiraGame.PlayerController
+  walkSpeed: 3.6
+  runSpeed: 6.2
+  crouchSpeed: 1.7
+  groundAcceleration: 32
+  airAcceleration: 12
+  jumpVelocity: 8.2
+  coyoteTime: 0.12
+  jumpBuffer: 0.14
+  jumpCutMultiplier: 0.45
+  takeoffGrace: 0.12
+  landingLock: 0.08
+  groundProbeDistance: 0.22
+  snapToGroundDistance: 0.4
+  wallBlockDistance: 0.25
+  gravity: 22
+  rotationSpeed: 12
+  turnAssistLimit: 55
+  footstepIntervalWalk: 0.46
+  footstepIntervalRun: 0.29
+  abilityRadius: 4.6
+  abilityCost: 12
+  heartRegen: 1.6
+  heartDanger: 15
+  pulseInterval: 0.35
+  visual: {fileID: 238131164}
+  animator: {fileID: 0}
+  animationDriver: {fileID: 0}
+  disableRootMotion: 1
+  autoAlignVisual: 1
+  fitCapsuleToModel: 1
+  capsuleRadiusFactor: 0.62
+  capsuleFootMargin: 0.02
+  capsuleMaxHeight: 2.1
+  hideZoneLevel: 0
+  crouchHeight: 1.05
+  crouchHeightSpeed: 7
+  unstickDelay: 0.35
+  depenetrationRange: 0.6
+  groundWatchdogDistance: 12
+  fallLimit: -8
+  camera: {fileID: 0}
+  weapon: {fileID: 0}
+  isGrounded: 0
+  isJumping: 0
+  isFalling: 0
+  verticalVelocity: 0
+--- !u!143 &1475229218
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1475229216}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Height: 1.8
+  m_Radius: 0.32
+  m_SlopeLimit: 50
+  m_StepOffset: 0.4
+  m_SkinWidth: 0.04
+  m_MinMoveDistance: 0
+  m_Center: {x: 0, y: 0.9, z: 0}
+--- !u!4 &1475229219
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1475229216}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 6, y: 1.2, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 238131164}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!114 &1475229220
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1475229216}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f2215f2ce48e40488aa7372464f0c6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EiraGame.EiraAnimationController
+  animator: {fileID: 238131165}
 --- !u!1 &1478973428
 GameObject:
   m_ObjectHideFlags: 0
@@ -42115,6 +42434,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c140f6b8ed13b644bfa6781c6bc246b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EiraGame.GameManager
+  missionDirector: {fileID: 0}
   hud: {fileID: 0}
 --- !u!4 &1562640972
 Transform:
@@ -43357,6 +43677,10 @@ MonoBehaviour:
   promptText: Interactuar
   kind: 1
   amount: 30
+  bob: 1
+  bobHeight: 0.12
+  bobSpeed: 1.8
+  glow: 1
 --- !u!135 &1607220053
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -48673,6 +48997,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1812804772}
   - component: {fileID: 1812804771}
+  - component: {fileID: 1812804773}
   m_Layer: 0
   m_Name: GreenExit
   m_TagString: Untagged
@@ -48760,6 +49085,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1812804773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1812804770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!1 &1814338921
 GameObject:
   m_ObjectHideFlags: 0
@@ -50264,6 +50618,10 @@ MonoBehaviour:
   promptText: Interactuar
   kind: 1
   amount: 40
+  bob: 1
+  bobHeight: 0.12
+  bobSpeed: 1.8
+  glow: 1
 --- !u!135 &1859758092
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -50924,6 +51282,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1891776810}
   - component: {fileID: 1891776809}
+  - component: {fileID: 1891776811}
   m_Layer: 0
   m_Name: redLight
   m_TagString: Untagged
@@ -51011,6 +51370,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2019285140}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1891776811
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1891776808}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!21 &1892993825
 Material:
   serializedVersion: 8
@@ -54793,6 +55181,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2020374050}
   - component: {fileID: 2020374049}
+  - component: {fileID: 2020374051}
   m_Layer: 0
   m_Name: Sun
   m_TagString: Untagged
@@ -54880,6 +55269,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2020374051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2020374048}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!1 &2022262990
 GameObject:
   m_ObjectHideFlags: 0
@@ -55083,96 +55501,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2028419349}
   m_Mesh: {fileID: 4300000, guid: e1a4193fe630ffb408ad6948150b607f, type: 2}
---- !u!1 &2028942437
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2028942438}
-  - component: {fileID: 2028942440}
-  - component: {fileID: 2028942439}
-  m_Layer: 0
-  m_Name: EiraVisual
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2028942438
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2028942437}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 665868008}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!23 &2028942439
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2028942437}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: d33dafced2737d2439a3ea7f4b821d64, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &2028942440
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2028942437}
-  m_Mesh: {fileID: 4300000, guid: 1da1262031e771648a7b041338defbde, type: 2}
 --- !u!1 &2031132392
 GameObject:
   m_ObjectHideFlags: 0
@@ -55459,6 +55787,10 @@ MonoBehaviour:
   promptText: Interactuar
   kind: 0
   amount: 50
+  bob: 1
+  bobHeight: 0.12
+  bobSpeed: 1.8
+  glow: 1
 --- !u!135 &2040366385
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -57099,7 +57431,7 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1562640972}
-  - {fileID: 665868008}
+  - {fileID: 1475229219}
   - {fileID: 1164352826}
   - {fileID: 870568444}
   - {fileID: 2020374050}

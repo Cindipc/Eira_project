@@ -3,97 +3,376 @@ using UnityEngine.InputSystem;
 
 namespace EiraGame
 {
-    // Lectura de input: prefiere el Input System (Keyboard/Mouse.current).
-    // Si no hay dispositivo activo, cae al Input Manager legacy para que WASD
-    // y el ratón funcionen siempre (aunque falte un dispositivo del Input System).
     public static class EiraInput
     {
-        static bool HasKeyboard => Keyboard.current != null;
-        static bool HasMouse => Mouse.current != null;
+        private static Keyboard Keyboard =>
+            UnityEngine.InputSystem.Keyboard.current;
 
-        static bool Down(Key k, KeyCode legacy)
-        {
-            if (HasKeyboard) return Keyboard.current[k].isPressed;
-            return Input.GetKey(legacy);
-        }
+        private static Mouse Mouse =>
+            UnityEngine.InputSystem.Mouse.current;
 
-        static bool WasPressed(Key k, KeyCode legacy)
-        {
-            if (HasKeyboard) return Keyboard.current[k].wasPressedThisFrame;
-            return Input.GetKeyDown(legacy);
-        }
+        private static Gamepad Gamepad =>
+            UnityEngine.InputSystem.Gamepad.current;
+
+        // =========================================================
+        // MOVIMIENTO
+        // =========================================================
 
         public static Vector2 MoveAxis()
         {
-            if (HasKeyboard)
+            Vector2 keyboard = Vector2.zero;
+
+            if (Keyboard != null)
             {
-                float x = 0f, y = 0f;
-                if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) x += 1f;
-                if (Keyboard.current.leftArrowKey.isPressed) x -= 1f;
-                if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) y += 1f;
-                if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) y -= 1f;
-                return new Vector2(x, y).normalized;
+                if (Keyboard.wKey.isPressed ||
+                    Keyboard.upArrowKey.isPressed)
+                    keyboard.y += 1f;
+
+                if (Keyboard.sKey.isPressed ||
+                    Keyboard.downArrowKey.isPressed)
+                    keyboard.y -= 1f;
+
+                if (Keyboard.dKey.isPressed ||
+                    Keyboard.rightArrowKey.isPressed)
+                    keyboard.x += 1f;
+
+                if (Keyboard.aKey.isPressed ||
+                    Keyboard.leftArrowKey.isPressed)
+                    keyboard.x -= 1f;
             }
-            return new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
+
+            Vector2 controller = Vector2.zero;
+
+            if (Gamepad != null)
+            {
+                controller = Gamepad.leftStick.ReadValue();
+            }
+
+            if (controller.sqrMagnitude > 0.01f)
+                return Vector2.ClampMagnitude(controller, 1f);
+
+            return Vector2.ClampMagnitude(keyboard, 1f);
         }
+
+        // =========================================================
+        // CORRER
+        // =========================================================
 
         public static bool Sprint()
         {
-            if (HasKeyboard) return Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed;
-            return Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            if (Keyboard != null)
+            {
+                if (Keyboard.leftShiftKey.isPressed ||
+                    Keyboard.rightShiftKey.isPressed)
+                {
+                    return true;
+                }
+            }
+
+            if (Gamepad != null &&
+                Gamepad.leftStickButton.isPressed)
+            {
+                return true;
+            }
+
+            return false;
         }
+
+        // =========================================================
+        // AGACHARSE
+        // =========================================================
 
         public static bool CrouchHeld()
         {
-            if (HasKeyboard) return Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.cKey.isPressed;
-            return Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.C);
+            if (Keyboard != null)
+            {
+                if (Keyboard.leftCtrlKey.isPressed ||
+                    Keyboard.cKey.isPressed)
+                {
+                    return true;
+                }
+            }
+
+            if (Gamepad != null &&
+                Gamepad.buttonEast.isPressed)
+            {
+                return true;
+            }
+
+            return false;
         }
+
+        // =========================================================
+        // SALTO
+        // =========================================================
 
         public static bool JumpDown()
         {
-            if (HasKeyboard) return Keyboard.current.spaceKey.wasPressedThisFrame;
-            return Input.GetKeyDown(KeyCode.Space);
+            bool keyboardJump = false;
+            bool controllerJump = false;
+
+            if (Keyboard != null)
+            {
+                keyboardJump =
+                    Keyboard.spaceKey.wasPressedThisFrame;
+            }
+
+            if (Gamepad != null)
+            {
+                controllerJump =
+                    Gamepad.buttonSouth.wasPressedThisFrame;
+            }
+
+            return keyboardJump || controllerJump;
         }
+
+        // =========================================================
+        // SALTO MANTENIDO (altura variable)
+        // =========================================================
+
+        public static bool JumpHeld()
+        {
+            if (Keyboard != null)
+            {
+                if (Keyboard.spaceKey.isPressed)
+                    return true;
+            }
+
+            if (Gamepad != null &&
+                Gamepad.buttonSouth.isPressed)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        // =========================================================
+        // INTERACTUAR
+        // =========================================================
 
         public static bool InteractDown()
         {
-            if (HasKeyboard) return Keyboard.current.eKey.wasPressedThisFrame;
-            return Input.GetKeyDown(KeyCode.E);
+            if (Keyboard != null &&
+                Keyboard.eKey.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            if (Gamepad != null &&
+                Gamepad.buttonWest.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            return false;
         }
+
+        // =========================================================
+        // HABILIDAD
+        // =========================================================
 
         public static bool AbilityDown()
         {
-            if (HasKeyboard) return Keyboard.current.aKey.wasPressedThisFrame;
-            return Input.GetKeyDown(KeyCode.A);
+            if (Keyboard != null &&
+                (Keyboard.fKey.wasPressedThisFrame ||
+                 Keyboard.qKey.wasPressedThisFrame ||
+                 Mouse != null && Mouse.rightButton.wasPressedThisFrame))
+            {
+                return true;
+            }
+
+            if (Gamepad != null &&
+                (Gamepad.buttonNorth.wasPressedThisFrame ||
+                 Gamepad.leftTrigger.wasPressedThisFrame))
+            {
+                return true;
+            }
+
+            return false;
         }
+
+        // =========================================================
+        // REINICIAR
+        // =========================================================
+
+        public static bool RestartDown()
+        {
+            if (Keyboard != null &&
+                Keyboard.rKey.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            if (Gamepad != null &&
+                Gamepad.selectButton.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        // =========================================================
+        // ATAQUE
+        // =========================================================
+
+        public static bool AttackDown()
+        {
+            if (Mouse != null &&
+                Mouse.leftButton.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            if (Gamepad != null &&
+                Gamepad.rightTrigger.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Disparo mantenido. Es lo que permite mantener pulsado y seguir
+        /// disparando, en vez de un disparo suelto por pulsación.
+        /// </summary>
+        public static bool AttackHeld()
+        {
+            if (Mouse != null &&
+                Mouse.leftButton.isPressed)
+            {
+                return true;
+            }
+
+            if (Gamepad != null &&
+                Gamepad.rightTrigger.isPressed)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        // =========================================================
+        // HABILIDAD CON CLICK DERECHO
+        // =========================================================
+
+        public static bool AbilityMouseDown()
+        {
+            if (Mouse != null &&
+                Mouse.rightButton.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            if (Gamepad != null &&
+                Gamepad.leftTrigger.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        // =========================================================
+        // CÁMARA
+        // =========================================================
+
+        public static Vector2 LookDelta(float sensitivity = 1f)
+        {
+            Vector2 mouse = Vector2.zero;
+
+            if (Mouse != null)
+            {
+                mouse = Mouse.delta.ReadValue() * sensitivity;
+
+                if (mouse.sqrMagnitude > 10000f)
+                    mouse = Vector2.zero;
+            }
+
+            Vector2 stick = Vector2.zero;
+
+            if (Gamepad != null)
+            {
+                stick = Gamepad.rightStick.ReadValue();
+
+                if (stick.sqrMagnitude > 0.001f)
+                    return stick * 5f;
+            }
+
+            return mouse;
+        }
+
+        // =========================================================
+        // DIÁLOGOS
+        // =========================================================
 
         public static bool AdvanceDown()
         {
-            if (HasKeyboard) return Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.spaceKey.wasPressedThisFrame || Keyboard.current.eKey.wasPressedThisFrame;
-            return Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.E);
+            if (Keyboard != null)
+            {
+                if (Keyboard.enterKey.wasPressedThisFrame ||
+                    Keyboard.spaceKey.wasPressedThisFrame ||
+                    Keyboard.eKey.wasPressedThisFrame)
+                {
+                    return true;
+                }
+            }
+
+            if (Gamepad != null)
+            {
+                if (Gamepad.buttonSouth.wasPressedThisFrame ||
+                    Gamepad.buttonWest.wasPressedThisFrame)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
+
+        // =========================================================
+        // MISIONES
+        // =========================================================
 
         public static bool ToggleMissionsDown()
         {
-            if (HasKeyboard) return Keyboard.current.tabKey.wasPressedThisFrame;
-            return Input.GetKeyDown(KeyCode.Tab);
+            if (Keyboard != null &&
+                Keyboard.tabKey.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            if (Gamepad != null &&
+                Gamepad.dpad.up.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            return false;
         }
+
+        // =========================================================
+        // PAUSA
+        // =========================================================
 
         public static bool SkipDown()
         {
-            if (HasKeyboard) return Keyboard.current.escapeKey.wasPressedThisFrame;
-            return Input.GetKeyDown(KeyCode.Escape);
-        }
-
-        public static Vector2 LookDelta(float sens = 1f)
-        {
-            if (HasMouse)
+            if (Keyboard != null &&
+                Keyboard.escapeKey.wasPressedThisFrame)
             {
-                var d = Mouse.current.delta.ReadValue() * sens;
-                if (Mathf.Abs(d.x) > 12f || Mathf.Abs(d.y) > 12f) return Vector2.zero;
-                return d;
+                return true;
             }
-            return new Vector2(Input.GetAxis("Mouse X") * sens, Input.GetAxis("Mouse Y") * sens);
+
+            if (Gamepad != null &&
+                Gamepad.startButton.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

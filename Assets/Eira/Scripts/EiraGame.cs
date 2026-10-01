@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace EiraGame
 {
@@ -27,6 +28,8 @@ namespace EiraGame
         public static event Action<float> OnSetBossBar;           // 0 = ocultar
         public static event Action OnBossDefeated;
         public static event Action<string, float> OnSubtitle;
+        public static event Action<int> OnDroneDestroyed;
+        public static event Action<Vector3> OnObjectiveMarkerMoved;
 
         public static void ScoreAdded(int v) => OnScoreAdded?.Invoke(v);
         public static void NovaSpeak(string s, float d = 3.5f) => OnNovaSpeak?.Invoke(s, d);
@@ -40,6 +43,8 @@ namespace EiraGame
         public static void SetBossBar(float f) => OnSetBossBar?.Invoke(f);
         public static void BossDefeated() => OnBossDefeated?.Invoke();
         public static void Subtitle(string s, float d) => OnSubtitle?.Invoke(s, d);
+        public static void DroneDestroyed(int points) => OnDroneDestroyed?.Invoke(points);
+        public static void ObjectiveMarkerMoved(Vector3 p) => OnObjectiveMarkerMoved?.Invoke(p);
 
         // Limpia todos los suscriptores entre cargas de escena.
         public static void ResetAll()
@@ -56,6 +61,8 @@ namespace EiraGame
             OnSetBossBar = null;
             OnBossDefeated = null;
             OnSubtitle = null;
+            OnDroneDestroyed = null;
+            OnObjectiveMarkerMoved = null;
         }
     }
 
@@ -79,7 +86,7 @@ namespace EiraGame
         };
     }
 
-    public enum GameState { Playing, Dead, GameOver, Won }
+    public enum GameState { Playing, Paused, Dead, GameOver, Won }
 
     public static class Points
     {
@@ -88,5 +95,6 @@ namespace EiraGame
         public const int Deactivate = 100;
         public const int AvoidEnemy = 150;
         public const int Mission = 500;
+        public const int DroneKill = 150;
     }
 }

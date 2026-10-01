@@ -327,12 +327,12 @@ namespace EiraGame.Editor
                     for (int c = 0; c < 4; c++)
                         m[r, c] = n.matrix[c * 4 + r];
                 t.localPosition = m.GetColumn(3);
-                t.localRotation = m.rotation;
+                t.localRotation = GlbTransformUtil.RotationFromMatrix(m);
                 t.localScale = m.lossyScale;
                 return;
             }
             t.localPosition = n.translation == null ? Vector3.zero : new Vector3(n.translation[0], n.translation[1], n.translation[2]);
-            t.localRotation = n.rotation == null ? Quaternion.identity : new Quaternion(n.rotation[0], n.rotation[1], n.rotation[2], n.rotation[3]);
+            t.localRotation = GlbTransformUtil.FromGltf(n.rotation);
             t.localScale = n.scale == null ? Vector3.one : new Vector3(n.scale[0], n.scale[1], n.scale[2]);
         }
     }
