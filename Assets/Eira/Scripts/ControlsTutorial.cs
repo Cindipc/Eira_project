@@ -182,7 +182,7 @@ namespace EiraGame
 
             var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
 
-            if (!scene.IsValid() || scene.name == EiraConst.IntroScene)
+            if (!scene.IsValid() || IsIntroScene(scene.name))
                 return;
 
             new GameObject("ControlsTutorial").AddComponent<ControlsTutorial>();
@@ -211,7 +211,13 @@ namespace EiraGame
         {
             var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
 
-            return scene.IsValid() && scene.name == EiraConst.IntroScene;
+            return scene.IsValid() && IsIntroScene(scene.name);
+        }
+
+        static bool IsIntroScene(string name)
+        {
+            return name == EiraConst.IntroScene
+                || name == EiraConst.IntroVideoScene;
         }
 
         void EnsureFont()

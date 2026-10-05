@@ -241,7 +241,7 @@ namespace EiraGame
             var cam = Camera.main;
 
             if (cam == null)
-                cam = FindObjectOfType<Camera>();
+                cam = FindAnyObjectByType<Camera>();
 
             if (cam == null)
                 return;

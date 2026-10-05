@@ -168,6 +168,7 @@ namespace EiraGame
         Text hintText;
 
         Button startButton;
+        Button skipAllButton;
 
         int index;
         float typeTimer;
@@ -275,7 +276,7 @@ namespace EiraGame
         void BuildUi()
         {
             if (
-                FindObjectOfType<EventSystem>() == null
+                FindAnyObjectByType<EventSystem>() == null
             )
             {
                 var es = new GameObject(
@@ -391,6 +392,19 @@ namespace EiraGame
             );
 
             startButton.gameObject.SetActive(false);
+
+            skipAllButton = MakeIntroButton(
+                center.transform,
+                "INICIAR JUEGO",
+                new Vector2(0.5f, 0.32f),
+                () =>
+                    SceneManager.LoadScene(
+                        EiraConst.Level1Scene
+                    ),
+                font
+            );
+
+            skipAllButton.gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -923,11 +937,17 @@ namespace EiraGame
             bool finalStep =
                 i == Steps.Length - 1;
 
+            bool firstStep =
+                i == 0;
+
             startButton.gameObject
                 .SetActive(finalStep);
 
+            skipAllButton.gameObject
+                .SetActive(firstStep);
+
             hintText.gameObject
-                .SetActive(!finalStep);
+                .SetActive(!finalStep && !firstStep);
 
             ApplyChapterLook(i);
 

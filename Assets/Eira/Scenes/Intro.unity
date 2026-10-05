@@ -217,7 +217,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IntroVideo
   videoPlayer: {fileID: 28886003}
-  nextScene: IntroScene
+  nextScene: Level1Scene
 --- !u!4 &183383660
 Transform:
   m_ObjectHideFlags: 0

@@ -53,9 +53,9 @@ namespace EiraGame
             Score = 0;
             InfoCollectedCount = 0;
 
-            player = FindObjectOfType<PlayerController>();
-            nova = FindObjectOfType<NovaCompanion>();
-            DronesAlive = FindObjectsOfType<DroneController>().Length;
+            player = FindAnyObjectByType<PlayerController>();
+            nova = FindAnyObjectByType<NovaCompanion>();
+            DronesAlive = FindObjectsByType<DroneController>(FindObjectsInactive.Exclude).Length;
 
             if (player != null)
             {
@@ -81,6 +81,9 @@ namespace EiraGame
 
             AudioFX.Init();
 
+            // Ensure main camera has FirstPersonCamera component
+            FirstPersonCamera.EnsureMainCamera();
+
             EnsureHud();
             EnsureMissionDirector();
             EnsureEnvironmentDressing();
@@ -96,7 +99,7 @@ namespace EiraGame
         /// </summary>
         private void EnsureMissionDirector()
         {
-            missionDirector = FindObjectOfType<MissionDirector>();
+            missionDirector = FindAnyObjectByType<MissionDirector>();
 
             if (missionDirector != null)
                 return;
@@ -107,7 +110,7 @@ namespace EiraGame
 
         private void EnsureEnvironmentDressing()
         {
-            if (FindObjectOfType<EnvironmentDressing>() != null)
+            if (FindAnyObjectByType<EnvironmentDressing>() != null)
                 return;
 
             var go = new GameObject("EnvironmentDressing");
@@ -146,7 +149,7 @@ namespace EiraGame
 
         void EnsureHud()
         {
-            hud = FindObjectOfType<HUDManager>();
+            hud = FindAnyObjectByType<HUDManager>();
             if (hud == null)
             {
                 var go = new GameObject("HUD");
@@ -193,7 +196,8 @@ namespace EiraGame
             if (hud != null)
                 hud.SetPaused(false);
 
-            UnityEngine.SceneManagement.SceneManager.LoadScene(EiraConst.Level1Scene);
+            string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            UnityEngine.SceneManagement.SceneManager.LoadScene(currentScene);
         }
 
         public void AddScore(int amount)
@@ -341,6 +345,23 @@ namespace EiraGame
             AddScore(Points.Mission);
             AudioFX.Win();
             if (hud != null) hud.ShowWin(Score, Lives);
+        }
+
+        public void LoadNextLevel()
+        {
+            string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            string nextScene = GetNextLevelScene(currentScene);
+            if (!string.IsNullOrEmpty(nextScene))
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(nextScene);
+            }
+        }
+
+        private string GetNextLevelScene(string currentScene)
+        {
+            if (currentScene == EiraConst.Level1Scene) return EiraConst.Level2Scene;
+            if (currentScene == EiraConst.Level2Scene) return EiraConst.Level3Scene;
+            return "";
         }
 
         // -------- misiones --------

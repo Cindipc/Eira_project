@@ -12,6 +12,19 @@ namespace EiraGame
         [Tooltip("Puntos al destruirlo.")]
         public int scoreOnDestroy = 150;
 
+        /// <summary>
+        /// Radio de la esfera de impacto.
+        ///
+        /// El dron se construye con un Sphere, un Cylinder y dos Cube, y en
+        /// toda su jerarquia no hay ni un solo collider (solo MeshFilter y
+        /// MeshRenderer). Sin collider, ninguna consulta de fisica encuentra al
+        /// androide: la bola blanca lo atraviesa de largo y solo se estrella
+        /// contra los muros. Por eso el dron se pone a si mismo una esfera de
+        /// este radio en el Start(); es lo unico que una bala puede golpear.
+        /// </summary>
+        [Tooltip("Radio de la esfera de impacto. El dron no trae collider en la jerarquia, asi que esta esfera es lo que puede golpear una bala.")]
+        public float hitRadius = 0.35f;
+
         public Vector3[] patrolNodes;
         public float detectRadius = 8f;
         public float attackRange = 2.8f;
@@ -36,6 +49,10 @@ namespace EiraGame
         float stunTimer;
         bool dead;
         bool lastAlert;
+        bool bodiesCleared;
+
+        // Evento para notificar cuando el dron muere
+        public event System.Action OnDeath;
 
         public bool IsChasing => chasing;
         public float Health => health;
@@ -52,6 +69,7 @@ namespace EiraGame
         MaterialPropertyBlock hurtBlock;
         float flashTimer;
         Color[] baseColors;
+        SphereCollider hitCollider;
 
         void Start()
         {
@@ -62,8 +80,74 @@ namespace EiraGame
             if (patrolNodes == null || patrolNodes.Length == 0)
                 patrolNodes = new[] { basePos };
 
+            EnsureHitCollider();
             CacheBodyRenderers();
             ApplyEyeColor(CalmColor);
+        }
+
+        /// <summary>
+        /// Le da al dron una esfera solida alrededor del cuerpo. No lleva
+        /// Rigidbody, asi que no empuja nada ni altera la fisica del nivel:
+        /// solo existe para que las consultas (el barrido de la bala, el
+        /// apuntado) lo encuentren.
+        /// </summary>
+        void EnsureHitCollider()
+        {
+            // Si alguien lo coloco a mano en el Inspector, se respeta tal cual.
+            hitCollider = GetComponent<SphereCollider>();
+
+            if (hitCollider == null)
+                hitCollider = gameObject.AddComponent<SphereCollider>();
+
+            // isTrigger = false a proposito: el proyectil barre con
+            // QueryTriggerInteraction.Ignore, un trigger seria invisible.
+            hitCollider.isTrigger = false;
+            hitCollider.center = new Vector3(0f, 0.05f, 0f);
+            hitCollider.radius = Mathf.Max(0.05f, hitRadius);
+
+            IgnoreCollisionsWithPlayer();
+        }
+
+        /// <summary>
+        /// Cuando el dron persigue a Eira se le pega encima (vuela justo
+        /// encima de su cabeza), y una esfera solida le bloquearia el
+        /// movimiento. Se ignoran esas colisiones: el dron sigue siendo
+        /// solido para las balas, pero transparente para los cuerpos de Eira y
+        /// de NOVA.
+        /// </summary>
+        void IgnoreCollisionsWithPlayer()
+        {
+            PlayerController[] pcs =
+                FindObjectsByType<PlayerController>();
+
+            for (int i = 0; i < pcs.Length; i++)
+            {
+                if (pcs[i] != null)
+                    IgnoreCollisionsWith(pcs[i].GetComponentsInChildren<Collider>());
+            }
+
+            NovaCompanion[] novas =
+                FindObjectsByType<NovaCompanion>();
+
+            for (int i = 0; i < novas.Length; i++)
+            {
+                if (novas[i] != null)
+                    IgnoreCollisionsWith(novas[i].GetComponentsInChildren<Collider>());
+            }
+        }
+
+        void IgnoreCollisionsWith(Collider[] others)
+        {
+            if (others == null || hitCollider == null)
+                return;
+
+            for (int i = 0; i < others.Length; i++)
+            {
+                if (others[i] == null || others[i] == hitCollider)
+                    continue;
+
+                Physics.IgnoreCollision(hitCollider, others[i], true);
+            }
         }
 
         void CacheBodyRenderers()
@@ -134,6 +218,15 @@ namespace EiraGame
             {
                 chasing = true;
                 lastSeenTimer = 0f;
+
+                // NOVA puede aparecer en runtime, despues del Start del dron.
+                // La primera vez que el dron persigue se repasa la lista de
+                // cuerpos, una sola vez, para que su esfera no lo empuje.
+                if (!bodiesCleared)
+                {
+                    bodiesCleared = true;
+                    IgnoreCollisionsWithPlayer();
+                }
             }
             else if (chasing)
             {
@@ -203,6 +296,14 @@ namespace EiraGame
             return false;
         }
 
+        /// <summary>
+        /// Destruye el dron públicamente (para explosiones, etc.)
+        /// </summary>
+        public void DestroyDrone()
+        {
+            DestroyDrone(null);
+        }
+
         void DestroyDrone(Transform shooter)
         {
             if (dead)
@@ -219,6 +320,9 @@ namespace EiraGame
                 transform.position,
                 new Color(0.4f, 0.95f, 1f),
                 14);
+
+            // Notificar suscriptores (ej. Level2Manager para contador de drones)
+            OnDeath?.Invoke();
 
             // Se desactiva en vez de destruirlo: el GameManager ya ha sido
             // notificado y no queda nada colgando si algo lo busca después.
@@ -310,10 +414,25 @@ namespace EiraGame
             if (dist > detectRadius * 1.4f) return false;
             if (Physics.Raycast(origin, (target - origin).normalized, out var hit, dist))
             {
+                // El rayo de vision nace dentro de la propia esfera de
+                // impacto del dron (centro en y 0.05, radio 0.35, origen en
+                // y 0.3). Si el dron se tomara a si mismo como obstaculo,
+                // HasLoS devolveria false y dejaria de detectar a Eira para
+                // siempre. El cuerpo propio nunca tapa la vista.
+                if (BelongsToThisDrone(hit.collider)) return true;
+
                 if (hit.collider.isTrigger) return true;
                 return hit.collider.GetComponent<PlayerController>() != null || hit.collider.GetComponentInParent<PlayerController>() != null;
             }
             return true;
+        }
+
+        bool BelongsToThisDrone(Collider col)
+        {
+            if (col == null || hitCollider == null)
+                return false;
+
+            return col.transform == transform || col.transform.IsChildOf(transform);
         }
     }
 }

@@ -648,13 +648,13 @@ namespace EiraGame.Editor
                 (driver != null ? "presente en " + driver.gameObject.name : "NO se pudo crear."));
 
             // Cámara: valores de trabajo.
-            ProfessionalThirdPersonCamera cam =
-                UnityEngine.Object.FindObjectOfType<ProfessionalThirdPersonCamera>();
+            FirstPersonCamera cam =
+                UnityEngine.Object.FindAnyObjectByType<FirstPersonCamera>();
 
             if (cam != null)
                 TuneCamera(cam, eira.transform);
             else
-                Say("AVISO: no se encontró ProfessionalThirdPersonCamera.");
+                Say("AVISO: no se encontró FirstPersonCamera.");
 
             // Puntos de aparición.
             PlaceEira(eira);
@@ -820,7 +820,7 @@ namespace EiraGame.Editor
         {
             int n = 0;
 
-            foreach (Transform t in Object.FindObjectsOfType<Transform>())
+            foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include))
             {
                 if (IsCorridorSlab(t))
                     n++;
@@ -857,7 +857,7 @@ namespace EiraGame.Editor
         {
             int fixedCount = 0;
 
-            foreach (Transform t in Object.FindObjectsOfType<Transform>(true))
+            foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include))
             {
                 if (!IsCorridorSlab(t))
                     continue;
@@ -1069,45 +1069,37 @@ namespace EiraGame.Editor
         // -------------------------------------------------------------
 
         static void TuneCamera(
-            ProfessionalThirdPersonCamera cam,
+            FirstPersonCamera cam,
             Transform eira)
         {
             SerializedObject so = new SerializedObject(cam);
 
-            // target / targetHeight / distance / ... son [SerializeField] private,
-            // así que se escriben por SerializedProperty.
-            SetPrivate(so, "targetHeight", 1.45f);
-            SetPrivate(so, "shoulderOffset", 0.6f);
-            SetPrivate(so, "distance", 3.6f);
-            SetPrivate(so, "minimumDistance", 0.7f);
-            SetPrivate(so, "positionSmooth", 16f);
+            SetPrivate(so, "eyeOffset", new Vector3(0f, 1.6f, 0.1f));
+            SetPrivate(so, "mouseSensitivity", 0.12f);
+            SetPrivate(so, "minPitch", -85f);
+            SetPrivate(so, "maxPitch", 85f);
             SetPrivate(so, "rotationSmooth", 20f);
-            SetPrivate(so, "sensitivity", 0.1f);
-            SetPrivate(so, "pitch", 8f);
-            SetPrivate(so, "minimumPitch", -18f);
-            SetPrivate(so, "maximumPitch", 55f);
-            SetPrivate(so, "returnBehindSpeed", 2.2f);
-            SetPrivate(so, "behindTolerance", 70f);
-            SetPrivate(so, "lookIdleBeforeReturn", 0.8f);
-            SetPrivate(so, "baseFov", 60f);
-            SetPrivate(so, "sprintFov", 68f);
-            SetPrivate(so, "collisionRadius", 0.2f);
-            SetPrivate(so, "collisionPadding", 0.1f);
-
-            SerializedProperty t = so.FindProperty("target");
-
-            if (t != null)
-                t.objectReferenceValue = eira;
+            SetPrivate(so, "positionSmooth", 25f);
+            SetPrivate(so, "baseFov", 65f);
+            SetPrivate(so, "sprintFov", 75f);
+            SetPrivate(so, "fovSmooth", 10f);
+            SetPrivate(so, "enableBobbing", true);
+            SetPrivate(so, "walkBobAmount", 0.05f);
+            SetPrivate(so, "walkBobSpeed", 8f);
+            SetPrivate(so, "runBobAmount", 0.08f);
+            SetPrivate(so, "runBobSpeed", 12f);
+            SetPrivate(so, "collisionRadius", 0.1f);
 
             so.ApplyModifiedPropertiesWithoutUndo();
 
-            // Coloca la cámara detrás de Eira con la nueva distancia.
-            Vector3 pivot = eira.position + Vector3.up * 1.45f;
-            Vector3 direction = Quaternion.Euler(8f, eira.eulerAngles.y, 0f) * Vector3.back;
-            cam.transform.position = pivot + direction * 3.6f;
+            // Coloca la cámara en la posición de los ojos de Eira
+            cam.transform.position = eira.position + new Vector3(0f, 1.6f, 0.1f);
+            cam.transform.rotation = Quaternion.Euler(0f, eira.eulerAngles.y, 0f);
+            cam.Yaw = eira.eulerAngles.y;
+            cam.Pitch = 0f;
+            cam.SnapBehind();
 
-            Say("Cámara: distance 3.6, hombro 0.6, FOV 60->68 al correr, " +
-                "auto-retorno suave, target = Eira.");
+            Say("Cámara (FirstPerson): eyeOffset 1.6, sensibilidad 0.12, FOV 65->75 al correr, bobbing activado, target = Eira.");
         }
 
         static void SetPrivate(SerializedObject so, string name, float value)
@@ -1118,6 +1110,26 @@ namespace EiraGame.Editor
                 return;
 
             p.floatValue = value;
+        }
+
+        static void SetPrivate(SerializedObject so, string name, Vector3 value)
+        {
+            SerializedProperty p = so.FindProperty(name);
+
+            if (p == null)
+                return;
+
+            p.vector3Value = value;
+        }
+
+        static void SetPrivate(SerializedObject so, string name, bool value)
+        {
+            SerializedProperty p = so.FindProperty(name);
+
+            if (p == null)
+                return;
+
+            p.boolValue = value;
         }
 
         // -------------------------------------------------------------
@@ -1139,7 +1151,7 @@ namespace EiraGame.Editor
         static void PlaceNova()
         {
             GameObject eira = GameObject.Find("Eira");
-            NovaCompanion nova = Object.FindObjectOfType<NovaCompanion>();
+            NovaCompanion nova = UnityEngine.Object.FindAnyObjectByType<NovaCompanion>();
 
             if (eira == null || nova == null)
             {

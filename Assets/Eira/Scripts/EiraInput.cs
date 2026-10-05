@@ -277,7 +277,34 @@ namespace EiraGame
         }
 
         // =========================================================
-        // CÁMARA
+        // CAMBIAR MODO DE C�MARA (Tercera/Primera persona)
+        // =========================================================
+
+        public static bool ToggleCameraMode()
+        {
+            if (Keyboard != null)
+            {
+                if (Keyboard.tKey.wasPressedThisFrame ||
+                    Keyboard.vKey.wasPressedThisFrame)
+                {
+                    return true;
+                }
+            }
+
+            if (Gamepad != null)
+            {
+                if (Gamepad.rightStickButton.wasPressedThisFrame ||
+                    Gamepad.dpad.down.wasPressedThisFrame)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // =========================================================
+        // C�?MARA
         // =========================================================
 
         public static Vector2 LookDelta(float sensitivity = 1f)

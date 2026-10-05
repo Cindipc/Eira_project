@@ -2,9 +2,9 @@ using UnityEngine;
 
 namespace EiraGame
 {
-    public enum PickupKind { Medkit, Energy }
+    public enum PickupKind { Medkit, Energy, Ammo }
 
-    // Botiquín tecnológico / cápsula de energía.
+    // Botiquín tecnológico / cápsula de energía / munición.
     public class Pickup : Interactable
     {
         public PickupKind kind = PickupKind.Medkit;
@@ -22,6 +22,11 @@ namespace EiraGame
         [Tooltip("Luz propia: en un corredor oscuro es lo que hace que el botiquín se vea.")]
         public bool glow = true;
 
+        [Header("Respawn")]
+        public bool canRespawn = false;
+        public float respawnTime = 30f;
+        private Transform respawnPoint;
+
         Vector3 basePos;
         Light glowLight;
         Renderer[] renderers;
@@ -29,10 +34,9 @@ namespace EiraGame
 
         void Start()
         {
-            promptText = kind == PickupKind.Medkit ? "E — Botiquín tecnológico" : "E — Cápsula de energía";
+            promptText = kind == PickupKind.Medkit ? "E — Botiquín tecnológico" : 
+                        (kind == PickupKind.Energy ? "E — Cápsula de energía" : "E — Munición");
 
-            // La base se toma aquí, no en Awake, porque la escena puede estar
-            // reparándose y la posición final no estar fijada todavía.
             basePos = transform.position;
 
             phase = Mathf.Repeat(basePos.x * 0.37f + basePos.z * 0.71f, Mathf.PI * 2f);
@@ -52,8 +56,15 @@ namespace EiraGame
                 glowLight.shadows = LightShadows.None;
                 glowLight.color = kind == PickupKind.Medkit
                     ? new Color(0.4f, 1f, 0.75f)
-                    : new Color(0.4f, 0.8f, 1f);
+                    : (kind == PickupKind.Energy ? new Color(0.4f, 0.8f, 1f) : new Color(1f, 0.8f, 0.3f));
             }
+        }
+
+        public void SetRespawn(Transform point, float time)
+        {
+            respawnPoint = point;
+            respawnTime = time;
+            canRespawn = true;
         }
 
         void Update()
@@ -79,13 +90,42 @@ namespace EiraGame
                 gm.HealPlayer(amount);
                 AudioFX.Pickup();
             }
-            else
+            else if (kind == PickupKind.Energy)
             {
                 gm.RestoreHeart(amount);
                 AudioFX.Pickup();
             }
+            else if (kind == PickupKind.Ammo)
+            {
+                var weapon = p.Weapon;
+                if (weapon != null)
+                {
+                    weapon.AddAmmo(Mathf.RoundToInt(amount));
+                }
+                AudioFX.Pickup();
+            }
             EnvOrb.Spawn(transform.position, new Color(0.5f, 1f, 0.8f));
-            Destroy(gameObject);
+            
+            if (canRespawn && respawnPoint != null)
+            {
+                StartCoroutine(RespawnRoutine());
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+        }
+
+        private System.Collections.IEnumerator RespawnRoutine()
+        {
+            gameObject.SetActive(false);
+            yield return new WaitForSeconds(respawnTime);
+            
+            transform.position = respawnPoint.position;
+            transform.rotation = respawnPoint.rotation;
+            basePos = transform.position;
+            phase = Mathf.Repeat(basePos.x * 0.37f + basePos.z * 0.71f, Mathf.PI * 2f);
+            gameObject.SetActive(true);
         }
     }
 }

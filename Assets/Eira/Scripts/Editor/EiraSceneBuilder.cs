@@ -157,11 +157,12 @@ namespace EiraGame.Editor
             BuildNova(
                 player.transform.position +
                 new Vector3(0f, 0f, -2.2f),
-                mats
+                mats,
+                1f  // GLB scale (adjust if robot is too big/small)
             );
 
             // IMPORTANTE:
-            // Aquí NO agregamos ProfessionalThirdPersonCamera.
+            // Aquí NO agregamos FirstPersonCamera.
             // La cámara queda independiente para poder probar
             // solamente la nueva escenografía.
 
@@ -239,7 +240,7 @@ namespace EiraGame.Editor
         {
             // Eliminar cámaras anteriores para evitar duplicados.
             Camera[] cameras =
-                Object.FindObjectsOfType<Camera>();
+                Object.FindObjectsByType<Camera>(FindObjectsInactive.Exclude);
 
             foreach (Camera existing in cameras)
             {
@@ -272,7 +273,7 @@ namespace EiraGame.Editor
                 );
 
             if (
-                Object.FindObjectOfType<AudioListener>() ==
+                UnityEngine.Object.FindAnyObjectByType<AudioListener>() ==
                 null
             )
             {
@@ -849,35 +850,128 @@ namespace EiraGame.Editor
 
         static NovaCompanion BuildNova(
             Vector3 pos,
-            Mats m
+            Mats m,
+            float scale = 1f  // escala del cuerpo NOVA
         )
         {
-            var go =
-                new GameObject("NOVA");
+            // FIRST: Destroy any existing Nova in the scene
+            var existingNova = GameObject.Find("NOVA");
+            if (existingNova != null)
+            {
+                Undo.DestroyObjectImmediate(existingNova);
+                Debug.Log("Destroyed existing NOVA");
+            }
 
-            go.transform.position = pos;
+            var existingNova2 = GameObject.Find("Nova");
+            if (existingNova2 != null)
+            {
+                Undo.DestroyObjectImmediate(existingNova2);
+                Debug.Log("Destroyed existing Nova");
+            }
 
-            var comp =
-                go.AddComponent<NovaCompanion>();
+            // El cuerpo de NOVA
+            var body = new GameObject("NOVA");
+            body.transform.position = pos;
+            body.transform.localScale = Vector3.one * scale;
 
-            var vis =
-                ModelFactory.BuildHumanoid(
-                    "NOVAVisual",
-                    HumanStyle.Nova,
-                    new[]
-                    {
-                        m.jNova,
-                        m.sNova,
-                        m.dNova
-                    }
-                );
+            NovaCompanion novaComp = body.AddComponent<NovaCompanion>();
 
-            vis.transform.SetParent(
-                go.transform,
-                false
+            // El robot (.glb) se importa como prefab mediante
+            // Assets/Editor/GlbToUnity.cs. Unity trata .glb como
+            // DefaultImporter, asi que no se puede instanciar el .glb
+            // directamente: hay que usar el prefab generado.
+            const string robotPrefabPath =
+                "Assets/Eira/Models/NovaRobot.prefab";
+
+            var robotPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                robotPrefabPath
             );
 
-            return comp;
+            if (robotPrefab == null)
+            {
+                // No se vuelve al modelo humanoide procedural: el personaje
+                // antiguo fue sustituido por el robot.
+                Debug.LogError(
+                    "EiraSceneBuilder: no se encontro " + robotPrefabPath +
+                    ". Ejecuta Eira > 1. Generar Prefab Robot (GLB). " +
+                    "NOVA se quedara sin visual."
+                );
+
+                return novaComp;
+            }
+
+            var robot = (GameObject)PrefabUtility.InstantiatePrefab(robotPrefab);
+            robot.name = "NOVAVisual_Robot";
+            robot.transform.SetParent(body.transform, false);
+            robot.transform.localPosition = Vector3.zero;
+            robot.transform.localRotation = Quaternion.identity;
+            robot.transform.localScale = Vector3.one;
+
+            FitRobotToNova(robot, body.transform);
+
+            return novaComp;
+        }
+
+        // ================================================================
+        // AJUSTE DEL ROBOT
+        // ================================================================
+
+        /// Escala el robot a la misma altura que Eira y apoya los pies en el
+        /// origen de NOVA. Mismo criterio que GlbToUnity.ReplaceNova, para
+        /// que una escena reconstruida se vea igual a la editada a mano.
+        static void FitRobotToNova(GameObject robot, Transform nova)
+        {
+            // Eira solo se LEE para saber la altura objetivo. No se modifica.
+            float targetHeight = 1.75f;
+            GameObject eira = GameObject.Find("Eira");
+
+            if (eira != null)
+            {
+                var cc = eira.GetComponent<CharacterController>();
+
+                if (cc != null && cc.height > 0.1f)
+                    targetHeight = cc.height;
+            }
+
+            Bounds b = CalcRenderBounds(robot);
+
+            if (b.size.y > 0.0001f)
+            {
+                robot.transform.localScale =
+                    Vector3.one * (targetHeight / b.size.y);
+            }
+
+            Bounds wb = CalcRenderBounds(robot);
+            float dy = wb.min.y - nova.position.y;
+            robot.transform.localPosition = new Vector3(0f, -dy, 0f);
+        }
+
+        static Bounds CalcRenderBounds(GameObject go)
+        {
+            var rends = go.GetComponentsInChildren<Renderer>();
+            Bounds b = new Bounds(go.transform.position, Vector3.zero);
+            bool first = true;
+
+            for (int i = 0; i < rends.Length; i++)
+            {
+                if (rends[i] == null)
+                    continue;
+
+                if (first)
+                {
+                    b = rends[i].bounds;
+                    first = false;
+                }
+                else
+                {
+                    b.Encapsulate(rends[i].bounds);
+                }
+            }
+
+            if (first)
+                b = new Bounds(go.transform.position, Vector3.one);
+
+            return b;
         }
 
         // ================================================================

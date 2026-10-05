@@ -87,7 +87,7 @@ namespace EiraGame
 
         void Awake()
         {
-            player = FindObjectOfType<PlayerController>();
+            player = FindAnyObjectByType<PlayerController>();
             gm = GameManager.Instance;
         }
 
@@ -138,10 +138,10 @@ namespace EiraGame
             terminalTargets.Clear();
             exitTargets.Clear();
 
-            foreach (var t in FindObjectsOfType<DataLog>())
+            foreach (var t in FindObjectsByType<DataLog>(FindObjectsInactive.Exclude))
                 infoTargets.Add(t.transform);
 
-            foreach (var p in FindObjectsOfType<PanelActivator>())
+            foreach (var p in FindObjectsByType<PanelActivator>(FindObjectsInactive.Exclude))
             {
                 if (p.kind == PanelKind.BossTerminal)
                     terminalTargets.Add(p.transform);
@@ -149,7 +149,7 @@ namespace EiraGame
                     puzzleTargets.Add(p.transform);
             }
 
-            foreach (var z in FindObjectsOfType<LevelExitZone>())
+            foreach (var z in FindObjectsByType<LevelExitZone>(FindObjectsInactive.Exclude))
                 exitTargets.Add(z.transform);
         }
 
@@ -313,6 +313,9 @@ namespace EiraGame
         void UpdateReminder()
         {
             if (player == null || !HasTarget)
+                return;
+
+            if (TargetDistance <= nearDistance)
                 return;
 
             if (TargetDistance <= remindDistance)

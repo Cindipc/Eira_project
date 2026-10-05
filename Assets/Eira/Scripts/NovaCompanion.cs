@@ -36,31 +36,31 @@ namespace EiraGame
         public float sayDuration = 4f;
 
         [Header("Seguimiento")]
-        [Tooltip("Distancia lateral respecto a Eira.")]
-        [SerializeField] private float followDistance = 1.1f;
+        [Tooltip("Distancia por detrás de Eira (metros).")]
+        [SerializeField] private float behindDistance = 2f;
 
-        [Tooltip("Distancia por detrás de Eira.")]
-        [SerializeField] private float behindDistance = 1.5f;
+        [Tooltip("Desplazamiento lateral a la derecha de Eira (metros).")]
+        [SerializeField] private float sideOffset = 0.8f;
 
         [Tooltip("Altura del objetivo sobre el suelo.")]
         [SerializeField] private float followHeight = 0f;
 
         [Tooltip("Suavizado de la posición (más alto = más pegada).")]
-        [SerializeField] private float followSmooth = 6f;
+        [SerializeField] private float followSmooth = 8f;
 
         [Tooltip("Suavizado del giro.")]
-        [SerializeField] private float rotationSmooth = 8f;
+        [SerializeField] private float rotationSmooth = 10f;
 
         [Tooltip("Si Nova se aleja más que esto, se teletransporta junto a Eira.")]
         [SerializeField] private float teleportDistance = 6f;
 
         [Tooltip("Velocidad máxima de Nova al recuperar distancia.")]
-        [SerializeField] private float maxSpeed = 7.5f;
+        [SerializeField] private float maxSpeed = 8f;
 
         [Tooltip("Radio del barrido para no atravesar paredes.")]
         [SerializeField] private float avoidRadius = 0.35f;
 
-        [Tooltip("Distancia a la que mira al frente en vez de a Eira.")]
+        [Tooltip("Distancia a la que mira en la dirección de movimiento en vez de a Eira.")]
         [SerializeField] private float lookAheadDistance = 3.5f;
 
         private PlayerController player;
@@ -80,16 +80,20 @@ namespace EiraGame
             if (player != null)
                 playerController = player.GetComponent<CharacterController>();
 
-            director = FindObjectOfType<MissionDirector>();
+            director = FindAnyObjectByType<MissionDirector>();
 
             GameEvents.OnPickedInfo += HandleInfo;
             GameEvents.OnPuzzleSolved += HandlePuzzle;
             GameEvents.OnBossDefeated += HandleBossEnd;
             GameEvents.OnSubtitle += OnSubtitleHook;
 
-            // Empieza pegada a Eira para que no atraviese el nivel al cargar.
+            // WarmSpawn: coloca a Nova en el suelo detrás de Eira al empezar la escena.
             if (player != null)
-                transform.position = ComputeSlotPosition() + Vector3.up * 0.05f;
+            {
+                Vector3 spawnPos = ComputeSlotPosition();
+                transform.position = ClampToGround(spawnPos);
+                transform.rotation = ComputeLookRotation();
+            }
         }
 
         private void OnDestroy()
@@ -187,7 +191,7 @@ namespace EiraGame
 
             if (flatDelta.magnitude > teleportDistance)
             {
-                transform.position = target + Vector3.up * 0.05f;
+                transform.position = ClampToGround(target);
             }
             else
             {
@@ -229,7 +233,7 @@ namespace EiraGame
         }
 
         /// <summary>
-        /// Punto de formación detrás del hombro derecho de Eira.
+        /// Punto de formación detrás y a la derecha de Eira.
         /// </summary>
         private Vector3 ComputeSlotPosition()
         {
@@ -241,7 +245,7 @@ namespace EiraGame
 
             return basePosition
                 - player.transform.forward * behindDistance
-                + player.transform.right * followDistance
+                + player.transform.right * sideOffset
                 + Vector3.up * followHeight;
         }
 
@@ -275,16 +279,23 @@ namespace EiraGame
 
         private Vector3 ClampToGround(Vector3 position)
         {
-            if (Physics.Raycast(
-                    position + Vector3.up * 1.5f,
-                    Vector3.down,
-                    out RaycastHit hit,
-                    8f,
-                    ~0,
-                    QueryTriggerInteraction.Ignore) &&
-                !hit.transform.IsChildOf(transform))
+            // NOVA es compinera de Eira y comparte su nivel, asi que su
+            // referencia de suelo son los pies de Eira (base del
+            // CharacterController).
+            //
+            // Antes se usaba un raycast vertical contra la geometria. En
+            // esta ciudad no sirve: el FBX de Sketchfab esta rotado 270 en
+            // X y el suelo no responde a los rayos frontales, asi que el
+            // unico impacto era el plano Object_2 a y=1.892 y NOVA quedaba
+            // flotando por encima del suelo real.
+            if (player != null)
             {
-                return new Vector3(position.x, hit.point.y, position.z);
+                var pc = player.GetComponent<CharacterController>();
+
+                float feetY = player.transform.position.y +
+                              (pc != null ? pc.center.y - pc.height * 0.5f : 0f);
+
+                position.y = feetY + followHeight;
             }
 
             return position;
@@ -305,20 +316,25 @@ namespace EiraGame
                     return Quaternion.LookRotation(toTarget.normalized, Vector3.up);
             }
 
-            // Cuando está lejos mira hacia donde va Eira; cuando está cerca,
-            // mira a Eira. Evita el "tornillo" continuo de la cabeza.
-            Vector3 flat = player.transform.position - transform.position;
-            flat.y = 0f;
-
-            if (flat.sqrMagnitude > lookAheadDistance * lookAheadDistance && playerController != null)
+            // Mira en la dirección en la que se mueve (su velocity horizontal),
+            // con fallback a mirar a Eira si está quieta.
+            CharacterController cc = playerController;
+            if (cc != null)
             {
-                Vector3 travel = playerController.velocity;
+                Vector3 travel = cc.velocity;
                 travel.y = 0f;
 
                 if (travel.sqrMagnitude > 0.04f)
-                    return Quaternion.LookRotation(travel.normalized, Vector3.up);
+                {
+                    // lookAheadDistance: mira un poco por delante en la dirección de movimiento
+                    Vector3 lookAheadPos = player.transform.position + travel.normalized * lookAheadDistance;
+                    Vector3 lookDir = lookAheadPos - transform.position;
+                    lookDir.y = 0f;
+                    return Quaternion.LookRotation(lookDir.normalized, Vector3.up);
+                }
             }
 
+            // Fallback: mira a Eira (un poco por encima de la cabeza)
             Vector3 lookDirection =
                 player.transform.position +
                 Vector3.up * 1.2f -

@@ -340,7 +340,7 @@ namespace EiraGame
 
         void BuildCanvas()
         {
-            if (FindObjectOfType<EventSystem>() == null)
+            if (FindAnyObjectByType<EventSystem>() == null)
             {
                 var es = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
                 try { es.GetComponent<InputSystemUIInputModule>().AssignDefaultActions(); } catch { }
@@ -519,24 +519,29 @@ namespace EiraGame
             damageImg.raycastTarget = false;
             damageObj.SetActive(false);
 
+            string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            string levelTitle = GetLevelTitle(currentScene);
+
             // --- pantallas finales ---
-            winPanel = BuildCenterPanel(root, "VICTORIA", "Nivel 1 · El Despertar", new Color(0.15f, 0.35f, 0.2f));
-            overPanel = BuildCenterPanel(root, "DERROTA", "Nivel 1 · El Despertar", new Color(0.4f, 0.1f, 0.1f));
+            winPanel = BuildCenterPanel(root, "VICTORIA", levelTitle, new Color(0.15f, 0.35f, 0.2f));
+            overPanel = BuildCenterPanel(root, "DERROTA", levelTitle, new Color(0.4f, 0.1f, 0.1f));
 
             foreach (GameObject end in new[] { winPanel, overPanel })
             {
                 MakeButton(end.transform, "Jugar de nuevo", new Vector2(0, -320), () =>
-                    SceneManager.LoadScene(EiraConst.Level1Scene));
+                {
+                    if (GameManager.Instance != null) GameManager.Instance.LoadNextLevel();
+                });
                 MakeButton(end.transform, "Menú principal", new Vector2(0, -390), () =>
                 {
                     Time.timeScale = 1f;
-                    SceneManager.LoadScene(EiraConst.IntroScene);
+                    SceneManager.LoadScene(EiraConst.IntroVideoScene);
                 });
                 end.SetActive(false);
             }
 
             // --- pausa ---
-            pausePanel = BuildCenterPanel(root, "PAUSA", "Nivel 1 · El Despertar", new Color(0.2f, 0.4f, 0.6f));
+            pausePanel = BuildCenterPanel(root, "PAUSA", levelTitle, new Color(0.2f, 0.4f, 0.6f));
             var pauseDetail = pausePanel.transform.Find("PanelDetail")?.GetComponent<Text>();
             if (pauseDetail != null)
                 pauseDetail.text = "WASD mover · Ratón cámara · Shift correr\nEspacio saltar · Ctrl agacharse\nE interactuar · F pulso\nH ayuda de controles";
@@ -551,9 +556,20 @@ namespace EiraGame
             MakeButton(pausePanel.transform, "Menú principal", new Vector2(0, -430), () =>
             {
                 Time.timeScale = 1f;
-                SceneManager.LoadScene(EiraConst.IntroScene);
+                SceneManager.LoadScene(EiraConst.IntroVideoScene);
             });
             pausePanel.SetActive(false);
+        }
+
+        private string GetLevelTitle(string sceneName)
+        {
+            return sceneName switch
+            {
+                EiraConst.Level1Scene => "Nivel 1 · El Despertar",
+                EiraConst.Level2Scene => "Nivel 2 · Calles Destruidas",
+                EiraConst.Level3Scene => "Nivel 3 · El Núcleo",
+                _ => "Nivel Desconocido"
+            };
         }
 
         void BuildBar(Transform parent, string name, Color fillColor, out Image fill, Vector2 anchor, Vector2 anchorMax, Vector2 pos, Vector2 size)
@@ -832,8 +848,9 @@ namespace EiraGame
         {
             winPanel.SetActive(true);
             var detail = winPanel.transform.Find("PanelDetail")?.GetComponent<Text>();
+            string levelName = GetLevelTitle(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
             if (detail != null)
-                detail.text = "Puntos totales: " + score + "\nVidas restantes: " + lives + "\n\nEira y NOVA cruzan la salida hacia la ciudad de las ruinas.\nCapítulo 1 completado.";
+                detail.text = "Puntos totales: " + score + "\nVidas restantes: " + lives + "\n\nEira y NOVA cruzan la salida.\n" + levelName + " completado.";
             overPanel.SetActive(false);
             missionList.Add(("Victoria", true));
         }

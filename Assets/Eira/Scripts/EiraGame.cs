@@ -6,7 +6,10 @@ namespace EiraGame
     public static class EiraConst
     {
         public const string IntroScene = "IntroScene";
+        public const string IntroVideoScene = "Intro";
         public const string Level1Scene = "Level1Scene";
+        public const string Level2Scene = "Level2Scene";
+        public const string Level3Scene = "Level3Scene";
         public const int MaxLives = 3;
         public const float MaxHealth = 100f;
         public const float MaxHeart = 100f;

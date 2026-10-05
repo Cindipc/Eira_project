@@ -51,10 +51,10 @@ namespace EiraGame
         [Tooltip("Fuerza de gravedad.")]
         public float gravity = 22f;
 
-        [Tooltip("Velocidad de giro de Eira.")]
-        public float rotationSpeed = 12f;
+        [Tooltip("Velocidad de giro de Eira en grados/segundo (540°/s ≈ giro completo en 0.67s).")]
+        [SerializeField] private float turnSpeedDegreesPerSecond = 540f;
 
-        [Tooltip("Giro máximo que Eira da para encarar la dirección de marcha. Si tendría que girar más que esto, se desplaza de lado hacia donde mira en vez de dar media vuelta de golpe. Es lo que quita el latigazo de 90° al pulsar una flecha.")]
+        [Tooltip("Giro máximo por frame para evitar cambios bruscos de dirección al pulsar una tecla. Se usa solo para limitar el objetivo instantáneo, no la velocidad de giro sostenida.")]
         [Range(10f, 180f)]
         public float turnAssistLimit = 55f;
 
@@ -132,7 +132,7 @@ namespace EiraGame
         public float fallLimit = -8f;
 
         [Header("Camera")]
-        [SerializeField] private ProfessionalThirdPersonCamera camera;
+        [SerializeField] private FirstPersonCamera camera;
 
         [Tooltip("Arma de Eira. Se busca sola si no se asigna.")]
         [SerializeField] private EiraWeapon weapon;
@@ -278,7 +278,7 @@ namespace EiraGame
                     this);
 
             if (camera == null)
-                camera = FindObjectOfType<ProfessionalThirdPersonCamera>();
+                camera = FindAnyObjectByType<FirstPersonCamera>();
 
             if (weapon == null)
                 weapon = GetComponentInChildren<EiraWeapon>(true);
@@ -672,6 +672,11 @@ namespace EiraGame
                 invuln - Time.deltaTime
             );
 
+            if (EiraInput.ToggleCameraMode() && camera != null)
+            {
+                camera.ToggleThirdPerson();
+            }
+
             if (PlayerState == GameState.Playing)
             {
                 TickMovement();
@@ -998,23 +1003,38 @@ namespace EiraGame
                     Vector3.Dot(moveDir, cameraForward)
                 );
 
-                Quaternion targetRotation = Quaternion.LookRotation(
-                    ResolveFacing(moveDir),
-                    Vector3.up
-                );
+                // Calcula la dirección hacia la que debe mirar Eira.
+                // - Adelante (W): mira hacia moveDir (alejándose de la cámara).
+                // - Atrás (S): gira 180° y mira hacia la cámara (-moveDir == cameraForward).
+                // - Lados (A/D): mira hacia cameraForward (hacia donde apunta la cámara).
+                Vector3 facingDir;
+                float inputY = input.y; // input es relativo a la cámara: y > 0 = adelante, y < 0 = atrás
+                if (inputY > 0.1f)
+                {
+                    facingDir = moveDir;
+                }
+                else if (inputY < -0.1f)
+                {
+                    // Hacia atrás: Eira se da la vuelta y camina hacia la cámara.
+                    facingDir = -moveDir; // == cameraForward
+                }
+                else
+                {
+                    // Strafing lateral: mantiene la orientación hacia donde mira la cámara.
+                    facingDir = cameraForward;
+                }
 
-                transform.rotation = Quaternion.Slerp(
-                    transform.rotation,
-                    targetRotation,
-                    1f - Mathf.Exp(-rotationSpeed * dt)
-                );
+                // Gira suavemente hacia facingDir a turnSpeedDegreesPerSecond.
+                Quaternion targetRotation = Quaternion.LookRotation(facingDir, Vector3.up);
+                float maxDegreesDelta = turnSpeedDegreesPerSecond * dt;
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, maxDegreesDelta);
             }
             else
             {
                 localMoveDirection = Vector2.Lerp(
                     localMoveDirection,
                     Vector2.zero,
-                    1f - Mathf.Exp(-rotationSpeed * dt)
+                    1f - Mathf.Exp(-turnSpeedDegreesPerSecond * 0.02f * dt)
                 );
             }
 
@@ -1213,48 +1233,6 @@ namespace EiraGame
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Decide hacia dónde mira Eira.
-        ///
-        /// El problema que arregla: con la cámara mirando a un lado, pulsar
-        /// una sola flecha pedía un giro instantáneo de hasta 180°, y
-        /// el slerp de rotationSpeed lo recorría en un par de frames. Se veía
-        /// como un latigazo de 90° que además dejaba a Eira encarada a un muro
-        /// del pasillo, obligando a girar la cámara para volver a encarrilarse.
-        ///
-        /// Ahora el giro está acotado a turnAssistLimit grados por frame de
-        /// objetivo: si Eira tendría que girarse más, sigue su dirección de entrada pero
-        /// mostrando la cara hacia la dirección que ya tiene, y el Animator
-        /// recibe un Strafe distinto de cero para que ande de lado. El giro
-        /// grande se reparte en varios frames y nunca hay salto.
-        /// </summary>
-        private Vector3 ResolveFacing(Vector3 moveDir)
-        {
-            if (moveDir.sqrMagnitude < 0.0001f)
-                return transform.forward;
-
-            float targetAngle =
-                Mathf.Atan2(moveDir.x, moveDir.z) * Mathf.Rad2Deg;
-
-            float currentAngle = transform.eulerAngles.y;
-
-            float delta = Mathf.DeltaAngle(currentAngle, targetAngle);
-
-            // El objetivo de rotación nunca se aleja más de turnAssistLimit de
-            // la orientación actual. Como el slerp de abajo es suave, el giro
-            // real acaba siendo progresivo en vez de un salto.
-            if (Mathf.Abs(delta) > turnAssistLimit)
-                targetAngle = currentAngle + Mathf.Sign(delta) * turnAssistLimit;
-
-            float limited = targetAngle * Mathf.Deg2Rad;
-
-            return new Vector3(
-                Mathf.Sin(limited),
-                0f,
-                Mathf.Cos(limited)
-            );
         }
 
         /// <summary>
@@ -1664,7 +1642,7 @@ namespace EiraGame
                 Vector3.up;
 
             DroneController[] drones =
-                UnityEngine.Object.FindObjectsOfType<DroneController>();
+                FindObjectsByType<DroneController>(FindObjectsInactive.Exclude);
 
             foreach (DroneController drone in drones)
             {
