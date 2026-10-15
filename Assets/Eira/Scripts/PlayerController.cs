@@ -75,6 +75,20 @@ namespace EiraGame
         public float pulseInterval = 0.35f;
 
         // =========================================================
+        // DEFENSA
+        // =========================================================
+
+        [Header("Defense")]
+        [Tooltip("Corazón por segundo que consume mantener la defensa levantada.")]
+        public float defendDrainPerSecond = 45f;
+
+        [Tooltip("Corazón extra que cuesta que un golpe impacte en el escudo.")]
+        public float defendHitCost = 8f;
+
+        [Tooltip("Segundos de castigo al quedarte sin corazón bloqueando.")]
+        public float guardBreakTime = 1.2f;
+
+        // =========================================================
         // VISUAL
         // =========================================================
 
@@ -211,6 +225,11 @@ namespace EiraGame
         private float heart = EiraConst.MaxHeart;
         private float pulseCooldown;
 
+        private bool defending;
+        private float guardBrokenUntil = -99f;
+        private GameObject shieldFx;
+        private Vector3 shieldBaseScale = Vector3.one;
+
         private readonly System.Collections.Generic.List<Interactable> near =
             new System.Collections.Generic.List<Interactable>();
 
@@ -241,6 +260,9 @@ namespace EiraGame
 
         /// <summary>Corazón en valor absoluto (0..MaxHeart).</summary>
         public float Heart => heart;
+
+        /// <summary>true mientras Eira mantiene la defensa levantada.</summary>
+        public bool IsDefending => defending;
 
         public GameState PlayerState =>
             GameManager.Instance != null
@@ -316,6 +338,8 @@ namespace EiraGame
 
             standHeight = cc.height;
             crouchHeightCurrent = cc.height;
+
+            shieldFx = BuildShieldVisual();
 
             // Estado inicial.
             velocity = Vector3.zero;
@@ -658,6 +682,33 @@ namespace EiraGame
             camera?.SnapBehind();
         }
 
+        // Gira a Eira y la camara para que mire hacia un punto del mundo (en
+        // el plano XZ). Se usa al derrotar a la Maquina Guardiana para que
+        // Eira encare el paisaje (el bosque) antes de terminar el Nivel 1.
+        public void FaceTowards(Vector3 worldPoint)
+        {
+            Vector3 dir = worldPoint - transform.position;
+            dir.y = 0f;
+
+            if (dir.sqrMagnitude < 0.0001f)
+                return;
+
+            float yaw = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+            transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+
+            if (camera == null)
+                camera = FindAnyObjectByType<FirstPersonCamera>();
+
+            if (camera != null)
+            {
+                camera.Yaw = yaw;
+                camera.SnapBehind();
+            }
+
+            if (GameManager.Instance != null)
+                GameManager.Instance.CameraYaw = yaw;
+        }
+
         // =========================================================
         // UPDATE
         // =========================================================
@@ -680,8 +731,11 @@ namespace EiraGame
             if (PlayerState == GameState.Playing)
             {
                 TickMovement();
+                TickDefense();
                 TickAbilities();
-                TickWeapon();
+
+                if (!defending)
+                    TickWeapon();
             }
             else if (PlayerState == GameState.Paused)
             {
@@ -790,6 +844,7 @@ namespace EiraGame
             isSprinting =
                 EiraInput.Sprint() &&
                 !IsCrouching &&
+                !defending &&
                 hasInput &&
                 input.y > 0.15f;
 
@@ -831,6 +886,11 @@ namespace EiraGame
             float speed = IsCrouching
                 ? crouchSpeed
                 : (isSprinting ? runSpeed : walkSpeed);
+
+            // Defenderse no deja correr: Eira avanza pasito y con el escudo
+            // levantado, como en un combate encarado.
+            if (defending)
+                speed = Mathf.Min(speed, crouchSpeed * 0.9f);
 
             Vector3 targetVelocity = moveDir * speed;
 
@@ -1466,7 +1526,8 @@ namespace EiraGame
                 IsCrouching,
                 isSprinting,
                 isJumping,
-                hasMoveInput
+                hasMoveInput,
+                defending
             );
         }
 
@@ -1499,6 +1560,178 @@ namespace EiraGame
                 ~0,
                 QueryTriggerInteraction.Ignore
             ) == false;
+        }
+
+        // =========================================================
+        // DEFENSA
+        // =========================================================
+
+        /// <summary>
+        /// Mientras se mantiene la defensa, Eira bloquea todo el daño de los
+        /// enemigos a cambio de corazón. Si el corazón se agota, el escudo se
+        /// rompe y entra un castigo fijo en el que no se puede volver a
+        /// levantar.
+        /// </summary>
+        private void TickDefense()
+        {
+            if (Time.time < guardBrokenUntil)
+            {
+                SetDefending(false);
+                return;
+            }
+
+            bool wantDefend =
+                EiraInput.DefendHeld() &&
+                heart > 0f;
+
+            if (wantDefend)
+            {
+                heart = Mathf.Max(
+                    0f,
+                    heart - defendDrainPerSecond * Time.deltaTime
+                );
+
+                SetDefending(true);
+
+                if (heart <= 0f)
+                    BreakGuard();
+            }
+            else
+            {
+                SetDefending(false);
+            }
+        }
+
+        private void SetDefending(bool value)
+        {
+            if (defending == value)
+            {
+                PulseShield();
+                return;
+            }
+
+            defending = value;
+
+            if (shieldFx != null &&
+                shieldFx.activeSelf != value)
+            {
+                shieldFx.SetActive(value);
+            }
+        }
+
+        /// <summary>
+        /// Pequeño latido del escudo mientras está levantado, para que se vea
+        /// que el bloqueo sigue activo sin necesidad de parpadeo.
+        /// </summary>
+        private void PulseShield()
+        {
+            if (!defending || shieldFx == null)
+                return;
+
+            float pulse =
+                1f + 0.06f * Mathf.Sin(Time.time * 7f);
+
+            shieldFx.transform.localScale =
+                shieldBaseScale * pulse;
+        }
+
+        private void BreakGuard()
+        {
+            SetDefending(false);
+
+            guardBrokenUntil =
+                Time.time + guardBreakTime;
+
+            GameEvents.Subtitle(
+                "Escudo roto: recupera corazón.",
+                guardBreakTime
+            );
+
+            AudioFX.Heart();
+        }
+
+        // =========================================================
+        // ESCUDO VISUAL
+        // =========================================================
+
+        private GameObject BuildShieldVisual()
+        {
+            GameObject go =
+                GameObject.CreatePrimitive(PrimitiveType.Sphere);
+
+            go.name = "EiraShield";
+
+            Collider col = go.GetComponent<Collider>();
+
+            if (col != null)
+                Object.Destroy(col);
+
+            go.transform.SetParent(transform, false);
+
+            float r = Mathf.Max(0.3f, cc.radius * 1.25f);
+
+            go.transform.localPosition =
+                new Vector3(0f, cc.height * 0.45f, 0f);
+
+            go.transform.localScale = Vector3.one * (r * 2f);
+
+            shieldBaseScale = go.transform.localScale;
+
+            MeshRenderer mr = go.GetComponent<MeshRenderer>();
+
+            if (mr != null)
+                mr.sharedMaterial = CreateShieldMaterial();
+
+            go.SetActive(false);
+
+            return go;
+        }
+
+        private static Material CreateShieldMaterial()
+        {
+            Shader shader =
+                Shader.Find("Universal Render Pipeline/Unlit");
+
+            if (shader == null)
+                shader = Shader.Find("Sprites/Default");
+
+            Material mat = new Material(shader);
+
+            Color cyan =
+                new Color(0.35f, 1f, 0.95f, 0.16f);
+
+            if (mat.HasProperty("_BaseColor"))
+                mat.SetColor("_BaseColor", cyan);
+            else if (mat.HasProperty("_Color"))
+                mat.SetColor("_Color", cyan);
+
+            if (mat.HasProperty("_Surface"))
+                mat.SetFloat("_Surface", 1f);
+
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+
+            if (mat.HasProperty("_Blend"))
+                mat.SetFloat("_Blend", 0f);
+
+            if (mat.HasProperty("_SrcBlend"))
+                mat.SetFloat(
+                    "_SrcBlend",
+                    (float)UnityEngine.Rendering.BlendMode.SrcAlpha
+                );
+
+            if (mat.HasProperty("_DstBlend"))
+                mat.SetFloat(
+                    "_DstBlend",
+                    (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha
+                );
+
+            if (mat.HasProperty("_ZWrite"))
+                mat.SetFloat("_ZWrite", 0f);
+
+            mat.renderQueue =
+                (int)UnityEngine.Rendering.RenderQueue.Transparent;
+
+            return mat;
         }
 
         // =========================================================
@@ -1729,6 +1962,15 @@ namespace EiraGame
             if (invuln > 0f)
                 amount = 0f;
 
+            // Defensa: un golpe real se neutraliza por completo mientras el
+            // escudo está levantado. Cuesta corazón extra y no otorga frames
+            // de invulnerabilidad, para que no se regale i-frames gratis.
+            if (defending && amount > 0f)
+            {
+                HeartBlocked();
+                return;
+            }
+
             Health -= amount;
 
             invuln =
@@ -1755,6 +1997,24 @@ namespace EiraGame
         // =========================================================
         // CURACIÓN
         // =========================================================
+
+        private void HeartBlocked()
+        {
+            AudioFX.Block();
+
+            GameEvents.Subtitle(
+                "Bloqueado: daño neutralizado.",
+                0.8f
+            );
+
+            heart = Mathf.Max(
+                0f,
+                heart - defendHitCost
+            );
+
+            if (heart <= 0f)
+                BreakGuard();
+        }
 
         public void Heal(float amount)
         {

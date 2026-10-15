@@ -116,6 +116,16 @@ namespace EiraGame
                     test   = () => EiraInput.AbilityDown(),
                     hint   = "Pulso: empuja y daña lo que tengas cerca"
                 },
+                new Step
+                {
+                    action = "Defenderse",
+                    keys   = "Clic der. / B",
+                    pad    = "LB",
+                    hold   = 0.25f,
+                    test   = () => EiraInput.DefendHeld(),
+                    hint   = "Mantén pulsado para bloquear el daño "
+                          + "(consume corazón)"
+                },
             };
         }
 

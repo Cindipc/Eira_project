@@ -33,6 +33,7 @@ namespace EiraGame
         private int movingHash;
         private int strafeHash;
         private int sprintHash;
+        private int defendingHash;
 
         private bool hasSpeed;
         private bool hasGrounded;
@@ -43,6 +44,7 @@ namespace EiraGame
         private bool hasMoving;
         private bool hasStrafe;
         private bool hasSprint;
+        private bool hasDefending;
 
         private void Reset()
         {
@@ -70,6 +72,7 @@ namespace EiraGame
             movingHash = Animator.StringToHash("Moving");
             strafeHash = Animator.StringToHash("Strafe");
             sprintHash = Animator.StringToHash("Sprint");
+            defendingHash = Animator.StringToHash("Defending");
 
             hasSpeed = Has(AnimatorControllerParameterType.Float, "Speed");
             hasGrounded = Has(AnimatorControllerParameterType.Bool, "Grounded");
@@ -80,6 +83,7 @@ namespace EiraGame
             hasMoving = Has(AnimatorControllerParameterType.Bool, "Moving");
             hasStrafe = Has(AnimatorControllerParameterType.Float, "Strafe");
             hasSprint = Has(AnimatorControllerParameterType.Bool, "Sprint");
+            hasDefending = Has(AnimatorControllerParameterType.Bool, "Defending");
         }
 
         private bool Has(AnimatorControllerParameterType type, string name)
@@ -136,7 +140,8 @@ namespace EiraGame
             bool crouching,
             bool sprinting,
             bool jumping,
-            bool movingInput)
+            bool movingInput,
+            bool defending = false)
         {
             if (animator == null)
                 return;
@@ -179,6 +184,9 @@ namespace EiraGame
 
             if (hasCrouch)
                 animator.SetBool(crouchHash, crouching);
+
+            if (hasDefending)
+                animator.SetBool(defendingHash, defending);
 
             if (hasMoving)
                 animator.SetBool(movingHash, movingInput || horizontalSpeed > 0.15f);

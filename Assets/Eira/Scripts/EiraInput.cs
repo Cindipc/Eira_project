@@ -176,8 +176,7 @@ namespace EiraGame
         {
             if (Keyboard != null &&
                 (Keyboard.fKey.wasPressedThisFrame ||
-                 Keyboard.qKey.wasPressedThisFrame ||
-                 Mouse != null && Mouse.rightButton.wasPressedThisFrame))
+                 Keyboard.qKey.wasPressedThisFrame))
             {
                 return true;
             }
@@ -185,6 +184,38 @@ namespace EiraGame
             if (Gamepad != null &&
                 (Gamepad.buttonNorth.wasPressedThisFrame ||
                  Gamepad.leftTrigger.wasPressedThisFrame))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        // =========================================================
+        // DEFENDERSE
+        // =========================================================
+
+        /// <summary>
+        /// Defensa mantenida: mientras se sostiene, Eira bloquea el daño de
+        /// los enemigos a costa del corazón. Clic. derecho, tecla B (teclado)
+        /// o LB (mando).
+        /// </summary>
+        public static bool DefendHeld()
+        {
+            if (Mouse != null &&
+                Mouse.rightButton.isPressed)
+            {
+                return true;
+            }
+
+            if (Keyboard != null &&
+                Keyboard.bKey.isPressed)
+            {
+                return true;
+            }
+
+            if (Gamepad != null &&
+                Gamepad.leftShoulder.isPressed)
             {
                 return true;
             }

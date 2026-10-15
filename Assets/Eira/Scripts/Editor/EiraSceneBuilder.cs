@@ -14,9 +14,15 @@ namespace EiraGame.Editor
         // ENTORNO ESCANEADO
         // ================================================================
 
-        public static Vector3 EnvPosition = new Vector3(60f, -35f, 0f);
-        public static Vector3 EnvScale = new Vector3(20f, 20f, 20f);
+        // Ajustado al splat del pack (500k): bounds nativos 3.15 x 6.96 x 15.04.
+        // Escala no uniforme: alinea la huella del splat con el area de juego
+        // (126 x 27) y limita su altura a ~15. Suelo del splat en y = 0.
+        public static Vector3 EnvPosition = new Vector3(101.12f, 3.065f, -2.03f);
+        public static Vector3 EnvScale = new Vector3(8.588f, 2.155f, 8.377f);
         public static Vector3 EnvRotation = new Vector3(0f, 90f, 0f);
+
+        // El Nivel 1 se desarrolla dentro del entorno gaussiano; sin laboratorio procedural.
+        public static bool BuildLaboratory = false;
 
         // ================================================================
         // GEOMETRÍA PRINCIPAL
@@ -174,7 +180,10 @@ namespace EiraGame.Editor
 
             BuildEnvironment();
 
-            BuildArchitecture(mats);
+            if (BuildLaboratory)
+            {
+                BuildArchitecture(mats);
+            }
 
             BuildGameplay(mats);
 
@@ -788,7 +797,7 @@ namespace EiraGame.Editor
                 go.AddComponent<PlayerController>();
 
             const string modelPath =
-                "Assets/Eira/Characters/Eira_Base.fbx";
+                "Assets/Eira/Eira/Characters/EiraBase.fbx";
 
             var eiraModel =
                 AssetDatabase.LoadAssetAtPath<GameObject>(
@@ -2751,7 +2760,7 @@ namespace EiraGame.Editor
                 new GameObject(
                     "LevelExit",
                     typeof(BoxCollider),
-                    typeof(LevelExitZone)
+                    typeof(LevelExit)
                 );
 
             exit.transform.SetParent(
@@ -2776,6 +2785,21 @@ namespace EiraGame.Editor
                     4f,
                     6f
                 );
+
+            var exitComp = exit.GetComponent<LevelExit>();
+            if (exitComp != null)
+            {
+                var so = new SerializedObject(exitComp);
+                var pNext = so.FindProperty("nextLevelScene");
+                if (pNext != null) pNext.stringValue = EiraConst.Level2Scene;
+                var pBoss = so.FindProperty("requireBossDefeated");
+                if (pBoss != null) pBoss.boolValue = true;
+                var pAuto = so.FindProperty("autoLoadNextLevel");
+                if (pAuto != null) pAuto.boolValue = true;
+                var pDelay = so.FindProperty("exitDelay");
+                if (pDelay != null) pDelay.floatValue = 2f;
+                so.ApplyModifiedProperties();
+            }
         }
 
         // ================================================================

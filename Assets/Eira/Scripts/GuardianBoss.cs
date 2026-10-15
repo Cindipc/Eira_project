@@ -16,6 +16,10 @@ namespace EiraGame
         public Transform eye;
         public Light redLight;
 
+        // Punto del paisaje (bosque) que Eira encara al derrotar a la Maquina.
+        // El bosque del Nivel 1 esta al oeste/norte, sobre el suelo plano.
+        public Vector3 faceTarget = new Vector3(60f, 0f, 12f);
+
         int terminalsCharged;
         float stunTimer;
         float attackTimer;
@@ -116,6 +120,12 @@ namespace EiraGame
             var gm = GameManager.Instance;
             if (gm != null) gm.OnBossDefeated();
             if (exitDoor != null) exitDoor.Open();
+
+            // Al caer la Maquina, Eira gira para encarar el paisaje (el bosque)
+            // antes de que el Nivel 1 termine.
+            var player = gm != null ? gm.Player : null;
+            if (player != null)
+                player.FaceTowards(faceTarget);
         }
 
         void OnTriggerEnter(Collider other)

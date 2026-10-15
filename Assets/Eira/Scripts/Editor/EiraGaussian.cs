@@ -9,9 +9,9 @@ namespace EiraGame.Editor
     {
         public const string Root = "Assets/Eira";
         public const string Env = Root + "/Environment";
-        public const string Spz = Env + "/full_res.spz";
+        public const string Spz = Env + "/500k.spz";
         public const string SplatFolder = Env + "/Splat";
-        public const string SplatAsset = SplatFolder + "/full_res.asset";
+        public const string SplatAsset = SplatFolder + "/500k.asset";
         public const string GlbSource = Env + "/environment_collider.glb";
         public const string MeshAsset = Env + "/EnvironmentColliderMesh.asset";
         public const string Scenes = Root + "/Scenes";
@@ -86,7 +86,7 @@ namespace EiraGame.Editor
             Debug.Log($"EiraGaussian: feature URP añadido a {added} renderer(s).");
         }
 
-        // 2) Convierte full_res.spz en un GaussianSplatAsset mediante la ventana del paquete (reflexión).
+        // 2) Convierte 500k.spz en un GaussianSplatAsset mediante la ventana del paquete (reflexión).
         public static void ConvertSplat()
         {
             System.IO.Directory.CreateDirectory(EiraPaths.SplatFolder);
@@ -219,6 +219,29 @@ namespace EiraGame.Editor
                     Debug.LogWarning("EiraGaussian: GLB sin vértices.");
                     return null;
                 }
+
+                // El collider del pack viene en otra escala/espacio que el splat.
+                // Remapeamos sus vértices para que su caja coincida con los bounds del
+                // splat, así el collider alinea con la nube de gaussianas.
+                if (TryGetSplatBounds(out var sMin, out var sMax))
+                {
+                    var b = mesh.bounds;
+                    var cMin = b.min;
+                    var cSize = b.size;
+                    var sSize = sMax - sMin;
+                    var verts = mesh.vertices;
+                    for (int i = 0; i < verts.Length; i++)
+                    {
+                        var v = verts[i];
+                        v.x = sMin.x + (v.x - cMin.x) * (sSize.x / Mathf.Max(cSize.x, 1e-5f));
+                        v.y = sMin.y + (v.y - cMin.y) * (sSize.y / Mathf.Max(cSize.y, 1e-5f));
+                        v.z = sMin.z + (v.z - cMin.z) * (sSize.z / Mathf.Max(cSize.z, 1e-5f));
+                        verts[i] = v;
+                    }
+                    mesh.vertices = verts;
+                    mesh.RecalculateBounds();
+                }
+
                 AssetDatabase.CreateAsset(mesh, EiraPaths.MeshAsset);
                 AssetDatabase.SaveAssets();
                 return mesh;
@@ -228,6 +251,23 @@ namespace EiraGame.Editor
                 Debug.LogWarning("EiraGaussian: no se pudo leer el GLB del entorno: " + ex.Message);
                 return null;
             }
+        }
+
+        // Lee los bounds de la nube de gaussianas del GaussianSplatAsset.
+        static bool TryGetSplatBounds(out Vector3 min, out Vector3 max)
+        {
+            min = Vector3.zero;
+            max = Vector3.zero;
+            if (!System.IO.File.Exists(EiraPaths.SplatAsset)) return false;
+            var asset = AssetDatabase.LoadAssetAtPath<ScriptableObject>(EiraPaths.SplatAsset);
+            if (asset == null) return false;
+            var so = new SerializedObject(asset);
+            var pMin = so.FindProperty("m_BoundsMin");
+            var pMax = so.FindProperty("m_BoundsMax");
+            if (pMin == null || pMax == null) return false;
+            min = pMin.vector3Value;
+            max = pMax.vector3Value;
+            return true;
         }
     }
 }

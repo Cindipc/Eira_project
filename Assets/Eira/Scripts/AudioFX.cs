@@ -39,6 +39,7 @@ namespace EiraGame
         public static void Pickup() => PlayTone(880f, 0.09f, 0.5f, true, 1320f);
         public static void Info() => PlayTone(660f, 0.12f, 0.45f, true, 990f);
         public static void Ability() => PlayTone(220f, 0.25f, 0.5f, true, 110f);
+        public static void Block() => PlayTone(520f, 0.12f, 0.4f, true, 240f);
         public static void Hurt() => PlayTone(160f, 0.22f, 0.55f, true, 60f);
         public static void Door() => PlayTone(110f, 0.35f, 0.5f, true, 60f);
         public static void Beep() => PlayTone(1046f, 0.05f, 0.25f);
