@@ -12,6 +12,7 @@ namespace EiraGame
 
         public int Score { get; private set; }
         public int Lives { get; private set; }
+        public int MaxLives => EiraConst.MaxLives;
         public int InfoCollectedCount { get; private set; }
         public GameState State { get; private set; }
         public bool BossDefeated { get; private set; }
@@ -86,6 +87,7 @@ namespace EiraGame
 
             EnsureHud();
             EnsureMissionDirector();
+            EnsureLevelGround();
             EnsureEnvironmentDressing();
 
             SetObjective(Missions.Names[Missions.MWake]);
@@ -115,6 +117,21 @@ namespace EiraGame
 
             var go = new GameObject("EnvironmentDressing");
             go.AddComponent<EnvironmentDressing>();
+        }
+
+        /// <summary>
+        /// Suelo y objetos del recorrido: si el nivel quedó con mitad del
+        /// camino sin piso y objetos flotando, este componente lo repara en
+        /// runtime (antes de que la ambientación y los drones fijen su
+        /// posición definitiva).
+        /// </summary>
+        private void EnsureLevelGround()
+        {
+            if (FindAnyObjectByType<LevelGroundFixer>() != null)
+                return;
+
+            var go = new GameObject("LevelGroundFixer");
+            go.AddComponent<LevelGroundFixer>();
         }
 
         void Start()
@@ -283,6 +300,15 @@ namespace EiraGame
         public void OnPlayerHit()
         {
             if (hud != null) hud.FlashDamage();
+            RefreshPlayerHud();
+        }
+
+        /// <summary>
+        /// Eira ha bloqueado un golpe (y normalmente lo ha devuelto). Refresca
+        /// el HUD del corazón y avisa a la cámara para que el bloqueo se note.
+        /// </summary>
+        public void OnPlayerBlocked()
+        {
             RefreshPlayerHud();
         }
 

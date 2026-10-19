@@ -70,6 +70,10 @@ namespace EiraGame
         [Header("Ability")]
         public float abilityRadius = 4.6f;
         public float abilityCost = 12f;
+
+        [Tooltip("Daño que el pulso defensivo hace a los enemigos que alcanza.")]
+        public float abilityDamage = 18f;
+
         public float heartRegen = 1.6f;
         public float heartDanger = 15f;
         public float pulseInterval = 0.35f;
@@ -80,13 +84,30 @@ namespace EiraGame
 
         [Header("Defense")]
         [Tooltip("Corazón por segundo que consume mantener la defensa levantada.")]
-        public float defendDrainPerSecond = 45f;
+        public float defendDrainPerSecond = 22f;
 
         [Tooltip("Corazón extra que cuesta que un golpe impacte en el escudo.")]
-        public float defendHitCost = 8f;
+        public float defendHitCost = 5f;
 
         [Tooltip("Segundos de castigo al quedarte sin corazón bloqueando.")]
         public float guardBreakTime = 1.2f;
+
+        [Tooltip("Fracción del daño bloqueado que se le devuelve al atacante. 1 = todo el golpe.")]
+        [Range(0f, 3f)]
+        public float blockReflect = 0.8f;
+
+        [Tooltip("Ventana de bloqueo perfecto: si el golpe llega justo al levantar el escudo, se devuelve mucho más daño y el enemigo queda aturdido.")]
+        public float parryWindow = 0.3f;
+
+        [Tooltip("Multiplicador del daño devuelto en un bloqueo perfecto.")]
+        public float parryReflectMultiplier = 2.2f;
+
+        [Tooltip("Aturdimiento que provoca un bloqueo perfecto.")]
+        public float parryStun = 1.2f;
+
+        [Tooltip("Cadencia de disparo mientras se mantiene el escudo (1 = igual, 0.6 = 40% más lenta).")]
+        [Range(0.1f, 1f)]
+        public float defendFireRate = 0.65f;
 
         // =========================================================
         // VISUAL
@@ -143,7 +164,7 @@ namespace EiraGame
         public float groundWatchdogDistance = 12f;
 
         [Tooltip("Margen por debajo del suelo por debajo del cual se considera que Eira esta cayendo al vacio.")]
-        public float fallLimit = -8f;
+        public float fallLimit = -14f;
 
         [Header("Camera")]
         [SerializeField] private FirstPersonCamera camera;
@@ -226,6 +247,8 @@ namespace EiraGame
         private float pulseCooldown;
 
         private bool defending;
+        private float defendStartTime = -99f;
+        private float lastBlockTime = -99f;
         private float guardBrokenUntil = -99f;
         private GameObject shieldFx;
         private Vector3 shieldBaseScale = Vector3.one;
@@ -255,6 +278,8 @@ namespace EiraGame
             }
         }
 
+        public float CurrentHeartHealth => heart;
+        public int CurrentHeartIndex => GameManager.Instance != null ? (GameManager.Instance.MaxLives - GameManager.Instance.Lives) : 0;
         public float HeartFrac =>
             heart / EiraConst.MaxHeart;
 
@@ -263,6 +288,9 @@ namespace EiraGame
 
         /// <summary>true mientras Eira mantiene la defensa levantada.</summary>
         public bool IsDefending => defending;
+
+        /// <summary>Factor de cadencia de disparo mientras se defiende (lo lee el arma).</summary>
+        public float DefendFireRate => defendFireRate;
 
         public GameState PlayerState =>
             GameManager.Instance != null
@@ -406,6 +434,24 @@ namespace EiraGame
             if (visual == null)
                 return;
 
+            Renderer meshRenderer = visual.GetComponentInChildren<SkinnedMeshRenderer>();
+            if (meshRenderer == null)
+            {
+                meshRenderer = visual.GetComponentInChildren<MeshRenderer>();
+            }
+
+            if (meshRenderer == null)
+            {
+                Debug.LogWarning(
+                    "[Eira] No se ha podido medir el cuerpo de Eira: no se encontró ningún Renderer. " +
+                    "Se conservan los valores de la cápsula.", this);
+                cc.center = new Vector3(0f, cc.height * 0.5f, 0f);
+                return;
+            }
+
+            // FitBodyToModel is called in Awake. We only need to do it once.
+            // If it was already done (cc.height is already set by a previous call), we skip.
+            // However, we check the return value of Apply.
             bool ok = EiraBodyFit.Apply(
                 visual,
                 cc,
@@ -419,14 +465,9 @@ namespace EiraGame
             if (ok)
                 return;
 
-            // Medición no creíble (sin mallas, escala rota, bounds disparado):
-            // no se toca nada y se avisa, porque encajar con una medida falsa
-            // deja a Eira del tamaño de un edificio.
+            // Fallback if EiraBodyFit fails (PlausibleHeight check failed)
             Debug.LogWarning(
-                "[Eira] No se ha podido medir el cuerpo de Eira: se conservan " +
-                "los valores de la cápsula. Revisa la escala del modelo y que " +
-                "tenga malla de piel.", this);
-
+                "[Eira] Medición no creíble: se conservan los valores de la cápsula.", this);
             cc.center = new Vector3(0f, cc.height * 0.5f, 0f);
         }
 
@@ -734,8 +775,11 @@ namespace EiraGame
                 TickDefense();
                 TickAbilities();
 
-                if (!defending)
-                    TickWeapon();
+                // Se puede disparar aunque el escudo esté levantado: si no,
+                // defenderse deja a Eira sin forma de contestar y los drones
+                // la matan sin que pueda hacer nada. La cadencia baja mientras
+                // mantiene la guardia (ver EiraWeapon).
+                TickWeapon();
             }
             else if (PlayerState == GameState.Paused)
             {
@@ -1612,6 +1656,9 @@ namespace EiraGame
 
             defending = value;
 
+            if (value)
+                defendStartTime = Time.time;
+
             if (shieldFx != null &&
                 shieldFx.activeSelf != value)
             {
@@ -1888,7 +1935,8 @@ namespace EiraGame
                 ) <= abilityRadius)
                 {
                     drone.OnDefensePulse(
-                        transform.position
+                        transform.position,
+                        abilityDamage
                     );
 
                     repelled = true;
@@ -1909,6 +1957,23 @@ namespace EiraGame
                     Points.AvoidEnemy,
                     1.8f
                 );
+            }
+
+            // El pulso también golpea a la Máquina Guardiana: si está a rango,
+            // recibe daño y se aturde un momento.
+            GuardianBoss[] bosses =
+                FindObjectsByType<GuardianBoss>(FindObjectsInactive.Exclude);
+
+            for (int i = 0; i < bosses.Length; i++)
+            {
+                if (bosses[i] == null || !bosses[i].IsActive)
+                    continue;
+
+                if (Vector3.Distance(pulseCenter, bosses[i].transform.position) <= abilityRadius)
+                {
+                    bosses[i].TakeHit(abilityDamage, bosses[i].transform.position, transform.forward, gameObject);
+                    bosses[i].Stun(0.8f);
+                }
             }
         }
 
@@ -1962,12 +2027,13 @@ namespace EiraGame
             if (invuln > 0f)
                 amount = 0f;
 
-            // Defensa: un golpe real se neutraliza por completo mientras el
-            // escudo está levantado. Cuesta corazón extra y no otorga frames
-            // de invulnerabilidad, para que no se regale i-frames gratis.
+            // Defensa: un golpe real se neutraliza mientras el escudo está
+            // levantado, pero ahora ADEMÁS se le devuelve al atacante. Antes
+            // bloquear solo gastaba corazón: defenderse no servía para ganar,
+            // solo para retrasar la muerte.
             if (defending && amount > 0f)
             {
-                HeartBlocked();
+                BlockIncoming(attacker, amount);
                 return;
             }
 
@@ -1995,25 +2061,92 @@ namespace EiraGame
         }
 
         // =========================================================
-        // CURACIÓN
+        // DEFENSA / CONTRAATAQUE
         // =========================================================
 
-        private void HeartBlocked()
+        /// <summary>
+        /// Resuelve un golpe que impacta en el escudo. Un bloqueo normal
+        /// neutraliza el daño y devuelve parte al atacante; si el golpe llega
+        /// dentro de <see cref="parryWindow"/> desde que se levantó el escudo,
+        /// es un bloqueo perfecto: no cuesta corazón, devuelve mucho más daño
+        /// y aturde al enemigo.
+        /// </summary>
+        private void BlockIncoming(GameObject attacker, float amount)
         {
+            bool perfect = Time.time - defendStartTime <= parryWindow;
+            bool firstInWindow = Time.time - lastBlockTime > 0.2f;
+            lastBlockTime = Time.time;
+
             AudioFX.Block();
 
-            GameEvents.Subtitle(
-                "Bloqueado: daño neutralizado.",
-                0.8f
-            );
+            if (firstInWindow && !perfect)
+            {
+                heart = Mathf.Max(0f, heart - defendHitCost);
+            }
 
-            heart = Mathf.Max(
-                0f,
-                heart - defendHitCost
-            );
+            float reflect = Mathf.Max(1f, amount) * blockReflect;
+
+            if (perfect)
+                reflect *= parryReflectMultiplier;
+
+            bool reflected = ReflectTo(attacker, reflect, perfect);
+
+            if (perfect)
+            {
+                GameEvents.Subtitle("¡Bloqueo perfecto! Contraataque.", 0.9f);
+                CombatFX.Impact(transform.position + Vector3.up, new Color(1f, 0.85f, 0.3f));
+            }
+            else
+            {
+                GameEvents.Subtitle(
+                    reflected ? "Bloqueado: contraataque." : "Bloqueado: daño neutralizado.",
+                    0.8f);
+            }
 
             if (heart <= 0f)
                 BreakGuard();
+        }
+
+        /// <summary>
+        /// Devuelve el daño bloqueado al atacante. Se apoya en
+        /// <see cref="IDamageable"/> para no depender del tipo concreto de
+        /// enemigo. Devuelve true si había algo a lo que devolver el golpe.
+        /// </summary>
+        private bool ReflectTo(GameObject attacker, float reflect, bool parry)
+        {
+            if (attacker == null)
+                return false;
+
+            IDamageable target = attacker.GetComponentInParent<IDamageable>();
+
+            if (target == null || !target.IsAlive)
+                return false;
+
+            Vector3 point = attacker.transform.position;
+
+            Vector3 dir = point - transform.position;
+            dir.y = 0f;
+
+            if (dir.sqrMagnitude < 0.0001f)
+                dir = transform.forward;
+            else
+                dir.Normalize();
+
+            target.TakeHit(reflect, point, dir, gameObject);
+
+            // El contraataque del bloqueo perfecto aturde de verdad.
+            if (parry)
+            {
+                DroneController drone = attacker.GetComponentInParent<DroneController>();
+
+                if (drone != null)
+                    drone.Stun(parryStun);
+            }
+
+            if (GameManager.Instance != null)
+                GameManager.Instance.OnPlayerBlocked();
+
+            return true;
         }
 
         public void Heal(float amount)

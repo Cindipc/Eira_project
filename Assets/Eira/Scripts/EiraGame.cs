@@ -7,6 +7,7 @@ namespace EiraGame
     {
         public const string IntroScene = "IntroScene";
         public const string IntroVideoScene = "Intro";
+        public const string PresentationScene = "IntroScene";
         public const string Level1Scene = "Level1Scene";
         public const string Level2Scene = "Level2Scene";
         public const string Level3Scene = "Level3Scene";
@@ -90,6 +91,25 @@ namespace EiraGame
     }
 
     public enum GameState { Playing, Paused, Dead, GameOver, Won }
+
+    /// <summary>
+    /// Cualquier cosa que Eira pueda dañar: drones, la Máquina Guardiana u
+    /// objetos destructibles. Existe para que la defensa y el pulso puedan
+    /// devolver el golpe sin conocer el tipo concreto del enemigo.
+    /// </summary>
+    public interface IDamageable
+    {
+        bool IsAlive { get; }
+
+        /// <summary>
+        /// Recibe un impacto. <paramref name="amount"/> es el daño,
+        /// <paramref name="point"/> el punto de contacto y
+        /// <paramref name="direction"/> la dirección del golpe (normalizada,
+        /// hacia el objetivo). Devuelve true si el impacto produce un efecto
+        /// fuerte (muerte o aturdimiento) que conviene celebrar.
+        /// </summary>
+        bool TakeHit(float amount, Vector3 point, Vector3 direction, GameObject source);
+    }
 
     public static class Points
     {

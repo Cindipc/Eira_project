@@ -13,16 +13,21 @@ namespace EiraGame
     {
         static Font cachedFont;
 
-        Text scoreText, heartsText, objectiveText, promptText, logText, subtitleText;
+        Text scoreText, objectiveText, promptText, logText, subtitleText;
         Text missionHeader, missionLines, controlsText;
         GameObject missionsPanel, bossObj, damageObj, winPanel, overPanel, controlsObj, pausePanel;
         GameObject reticleObj;
         GameObject markerObj;
         Transform markerArrow;
-        Image heartFill, healthFill, bossFill, damageImg;
+        Image bossFill, damageImg;
         float subtitleTimer, logTimer, damageFade, controlsTimer;
         float reticleKick;
         readonly List<(string, bool)> missionList = new List<(string, bool)>();
+
+        // Corazones independientes
+        GameObject[] heartContainers;
+        Image[] heartFills;
+        Text heartsLabel;
 
         // Sprites de la mira generados por código: el proyecto no tiene
         // sprite sheet, y una Image sin sprite es un rectángulo opaco que
@@ -223,7 +228,6 @@ namespace EiraGame
             };
             GameEvents.OnHeartDanger += () =>
             {
-                if (heartsText != null) heartsText.color = Color.red;
                 DamageTint(new Color(0.9f, 0.3f, 0.2f), 0.25f);
             };
             GameEvents.OnSetBossBar += f =>
@@ -360,13 +364,41 @@ namespace EiraGame
             // --- parte superior izquierda: puntos y vidas ---
             var scoreRect = MakeLabel(root, "PUNTOS  0", 36, TextAnchor.MiddleLeft, new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -20), new Vector2(600, 50), Color.white);
             scoreText = scoreRect.GetComponent<Text>();
-
-            heartsText = MakeTextScaled(root, "♥ ♥ ♥", 34, TextAnchor.MiddleLeft, new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -70), new Vector2(400, 45), new Color(1f, 0.35f, 0.35f));
-
+            
+            heartsLabel = MakeTextScaled(root, "VIDAS", 24, TextAnchor.MiddleLeft, new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -70), new Vector2(200, 45), new Color(0.8f, 0.9f, 0.8f));
+            
+            heartContainers = new GameObject[EiraConst.MaxLives];
+            heartFills = new Image[EiraConst.MaxLives];
+            for (int i = 0; i < EiraConst.MaxLives; i++)
+            {
+                var container = new GameObject("Heart_" + i, typeof(RectTransform), typeof(Image));
+                container.transform.SetParent(root, false);
+                var rt = container.GetComponent<RectTransform>();
+                rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(0, 1);
+                rt.anchoredPosition = new Vector2(110 + (i * 60), -70);
+                rt.sizeDelta = new Vector2(45, 45);
+                container.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.12f, 0.8f);
+                
+                var heartFillObj = new GameObject("Fill_" + i, typeof(Image));
+                heartFillObj.transform.SetParent(container.transform, false);
+                var fillRt = heartFillObj.GetComponent<RectTransform>();
+                fillRt.anchorMin = Vector2.zero; fillRt.anchorMax = Vector2.one;
+                fillRt.offsetMin = new Vector2(2, 2); fillRt.offsetMax = new Vector2(-2, -2);
+                var fillImg = heartFillObj.GetComponent<Image>();
+                fillImg.type = Image.Type.Filled;
+                fillImg.fillMethod = Image.FillMethod.Radial360;
+                fillImg.fillOrigin = 0;
+                fillImg.color = new Color(1f, 0.35f, 0.35f);
+                
+                heartContainers[i] = container;
+                heartFills[i] = fillImg;
+            }
+            
             // --- barras de vida y corazón (superior derecha) ---
-            BuildBar(root, "HealthBar", new Color(0.2f, 0.7f, 0.4f), out healthFill, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-380, -20), new Vector2(360, 34));
-            BuildBar(root, "HeartBar", new Color(0.2f, 0.55f, 1f), out heartFill, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-380, -56), new Vector2(360, 30));
-
+            BuildBar(root, "HealthBar", new Color(0.2f, 0.7f, 0.4f), out bossFill, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-380, -20), new Vector2(360, 34));
+            // Nota: bossFill se usaba antes para la salud general, ahora lo mantenemos para el jefe.
+            // Las barras de salud individuales están en los corazones.
+            
             var healthTxt = MakeTextScaled(root, "VIDA", 16, TextAnchor.MiddleRight, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-756, -22), new Vector2(330, 30), new Color(0.8f, 0.9f, 0.8f));
             var heartTxt = MakeTextScaled(root, "CORAZÓN", 16, TextAnchor.MiddleRight, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-756, -58), new Vector2(330, 30), new Color(0.8f, 0.9f, 1f));
 
@@ -524,18 +556,18 @@ namespace EiraGame
 
             // --- pantallas finales ---
             winPanel = BuildCenterPanel(root, "VICTORIA", levelTitle, new Color(0.15f, 0.35f, 0.2f));
-            overPanel = BuildCenterPanel(root, "DERROTA", levelTitle, new Color(0.4f, 0.1f, 0.1f));
+            overPanel = BuildCenterPanel(root, "HAS SIDO DERROTADA", levelTitle, new Color(0.4f, 0.1f, 0.1f));
 
             foreach (GameObject end in new[] { winPanel, overPanel })
             {
-                MakeButton(end.transform, "Jugar de nuevo", new Vector2(0, -320), () =>
+                MakeButton(end.transform, "Reintentar", new Vector2(0, -320), () =>
                 {
-                    if (GameManager.Instance != null) GameManager.Instance.LoadNextLevel();
+                    if (GameManager.Instance != null) GameManager.Instance.RestartLevel();
                 });
                 MakeButton(end.transform, "Menú principal", new Vector2(0, -390), () =>
                 {
                     Time.timeScale = 1f;
-                    SceneManager.LoadScene(EiraConst.IntroVideoScene);
+                    SceneManager.LoadScene(EiraConst.PresentationScene);
                 });
                 end.SetActive(false);
             }
@@ -556,7 +588,13 @@ namespace EiraGame
             MakeButton(pausePanel.transform, "Menú principal", new Vector2(0, -430), () =>
             {
                 Time.timeScale = 1f;
-                SceneManager.LoadScene(EiraConst.IntroVideoScene);
+                string sceneName = EiraConst.PresentationScene;
+                if (string.IsNullOrEmpty(sceneName))
+                {
+                    Debug.LogError("[HUDManager] PresentationScene name is null or empty in EiraConst.");
+                    return;
+                }
+                SceneManager.LoadScene(sceneName);
             });
             pausePanel.SetActive(false);
         }
@@ -683,7 +721,7 @@ namespace EiraGame
                 if (damageImg != null) damageImg.color = new Color(0.6f, 0.05f, 0.03f, Mathf.Max(0f, damageFade));
                 if (damageFade <= 0f && damageObj != null) damageObj.SetActive(false);
             }
-            if (heartsText != null) heartsText.color = Color.Lerp(heartsText.color, new Color(1f, 0.35f, 0.35f), 3f * Time.deltaTime);
+            if (heartsLabel != null) heartsLabel.color = Color.Lerp(heartsLabel.color, new Color(1f, 0.35f, 0.35f), 3f * Time.deltaTime);
 
             if (EiraInput.ToggleMissionsDown() && missionsPanel != null)
             {
@@ -803,6 +841,24 @@ namespace EiraGame
             damageFade = 0.7f;
             damageObj.SetActive(true);
             damageImg.color = new Color(0.6f, 0.05f, 0.03f, 0.7f);
+            
+            // Resaltar corazón activo
+            if (heartFills != null && GameManager.Instance != null && GameManager.Instance.Player != null)
+            {
+                int idx = GameManager.Instance.Player.CurrentHeartIndex; // Fixed reference to use PlayerController's index
+                if (idx >= 0 && idx < heartFills.Length)
+                {
+                    StartCoroutine(FlashHeart(idx));
+                }
+            }
+        }
+
+        System.Collections.IEnumerator FlashHeart(int idx)
+        {
+            Color original = heartFills[idx].color;
+            heartFills[idx].color = Color.white;
+            yield return new WaitForSeconds(0.1f);
+            heartFills[idx].color = original;
         }
 
         void DamageTint(Color c, float strength)
@@ -815,19 +871,44 @@ namespace EiraGame
 
         public void RefreshLives()
         {
-            if (heartsText == null || GameManager.Instance == null) return;
+            if (heartContainers == null || GameManager.Instance == null) return;
             int lives = GameManager.Instance.Lives;
-            string s = "";
-            for (int i = 0; i < EiraConst.MaxLives; i++)
-                s += i < lives ? "♥" : "·";
-            heartsText.text = "VIDAS  " + s;
+            for (int i = 0; i < heartContainers.Length; i++)
+            {
+                if (i < lives)
+                {
+                    heartContainers[i].SetActive(true);
+                    heartFills[i].color = new Color(1f, 0.35f, 0.35f);
+                }
+                else
+                {
+                    heartContainers[i].SetActive(false);
+                }
+            }
         }
-
+        
         public void RefreshBars()
         {
-            if (healthFill == null || heartFill == null || GameManager.Instance == null) return;
-            healthFill.fillAmount = Mathf.Clamp01(GameManager.Instance.PlayerHealth / EiraConst.MaxHealth);
-            heartFill.fillAmount = Mathf.Clamp01(GameManager.Instance.PlayerHeart);
+            if (heartFills == null || GameManager.Instance == null || GameManager.Instance.Player == null) return;
+            
+            float heartVal = GameManager.Instance.Player.CurrentHeartHealth;
+            int heartIdx = GameManager.Instance.Player.CurrentHeartIndex;
+            
+            for (int i = 0; i < heartFills.Length; i++)
+            {
+                if (i == heartIdx && i < GameManager.Instance.Lives)
+                {
+                    heartFills[i].fillAmount = Mathf.Clamp01(heartVal / EiraConst.MaxHeart);
+                }
+                else if (i < GameManager.Instance.Lives)
+                {
+                    heartFills[i].fillAmount = 1f;
+                }
+                else
+                {
+                    heartFills[i].fillAmount = 0f;
+                }
+            }
         }
 
         public void RefreshMissions()
@@ -860,7 +941,7 @@ namespace EiraGame
             overPanel.SetActive(true);
             var detail = overPanel.transform.Find("PanelDetail")?.GetComponent<Text>();
             if (detail != null)
-                detail.text = "Puntos: " + score + "\n\nPerdiste todas tus vidas.\nLa llave del año 3000 tendrá que esperar.";
+                detail.text = "Puntos: " + score + "\n\nFIN DEL JUEGO\n\nPerdiste todas tus vidas.\nLa llave del año 3000 tendrá que esperar.";
             winPanel.SetActive(false);
         }
     }

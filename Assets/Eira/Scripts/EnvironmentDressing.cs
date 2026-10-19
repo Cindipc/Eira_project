@@ -116,6 +116,28 @@ namespace EiraGame
             if (!ambientLights || neonLights <= 0)
                 return;
 
+            // El recorrido real del nivel manda. Las coordenadas de abajo son
+            // solo reserva para el caso raro en que no haya un grupo "Gameplay"
+            // (o esté vacío): antes eran valores fijos y, tras moverse el
+            // escenario al bosque, los neones quedaron iluminando el aire.
+            float startX = neonStartX;
+            float endX = neonEndX;
+            float height = neonHeight;
+            float sideZ = 9.5f;
+
+            Bounds b;
+            GameObject gameplay = GameObject.Find("Gameplay");
+
+            if (gameplay != null &&
+                LevelGroundFixer.TryBounds(gameplay, out b) &&
+                b.size.sqrMagnitude > 0.01f)
+            {
+                startX = b.min.x - 2f;
+                endX = b.max.x + 2f;
+                sideZ = b.size.z * 0.5f + 2.5f;
+                height = b.min.y + 5.5f;
+            }
+
             var parent = new GameObject("NeonRig");
             parent.transform.SetParent(transform, false);
 
@@ -129,22 +151,22 @@ namespace EiraGame
                 new Color(1f, 0.35f, 0.75f)
             };
 
-            float span = Mathf.Max(1f, neonEndX - neonStartX);
+            float span = Mathf.Max(1f, endX - startX);
 
             for (int i = 0; i < neonLights; i++)
             {
                 float t = neonLights == 1 ? 0.5f : i / (float)(neonLights - 1);
-                float x = Mathf.Lerp(neonStartX, neonEndX, t);
+                float x = Mathf.Lerp(startX, endX, t);
 
                 Color color = palette[i % palette.Length];
 
                 // Se alternan los lados: da sensación de recorrido, no de
                 // hilera simétrica.
-                float z = (i % 2 == 0) ? -9.5f : 9.5f;
+                float z = (i % 2 == 0) ? -sideZ : sideZ;
 
                 var go = new GameObject("Neon_" + i);
                 go.transform.SetParent(parent.transform, false);
-                go.transform.position = new Vector3(x, neonHeight, z);
+                go.transform.position = new Vector3(x, height, z);
 
                 var light = go.AddComponent<Light>();
                 light.type = LightType.Point;
@@ -208,8 +230,27 @@ namespace EiraGame
             var shape = ps.shape;
             shape.enabled = true;
             shape.shapeType = ParticleSystemShapeType.Box;
-            shape.scale = new Vector3(124f, 4.5f, 22f);
-            shape.position = new Vector3(59f, 2.2f, 0f);
+
+            // Igual que el neón: la caja de polvo se ajusta al recorrido
+            // real (si no, el polvo sigue flotando sobre la posición antigua).
+            GameObject gameplay = GameObject.Find("Gameplay");
+            Bounds b;
+
+            if (gameplay != null &&
+                LevelGroundFixer.TryBounds(gameplay, out b) &&
+                b.size.sqrMagnitude > 0.01f)
+            {
+                shape.scale = new Vector3(
+                    Mathf.Max(8f, b.size.x + 6f),
+                    4.5f,
+                    Mathf.Max(6f, b.size.z + 6f));
+                shape.position = new Vector3(b.center.x, b.min.y + 3.5f, b.center.z);
+            }
+            else
+            {
+                shape.scale = new Vector3(124f, 4.5f, 22f);
+                shape.position = new Vector3(59f, 2.2f, 0f);
+            }
 
             // Deriva lenta: el polvo baja y sube, como si hubiera
             // ventilación en el techo.

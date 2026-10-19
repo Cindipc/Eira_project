@@ -125,7 +125,22 @@ if (aimCamera == null)
                 return;
 
             Shoot();
-            cooldown = Mathf.Max(minInterval, 1f / Mathf.Max(0.1f, shotsPerSecond));
+            cooldown = Mathf.Max(minInterval, 1f / Mathf.Max(0.1f, ShotsPerSecond()));
+        }
+
+        /// <summary>
+        /// Cadencia efectiva en este frame. Con el escudo levantado se dispara
+        /// más despacio: defenderse ya no deja a Eira sin poder contestar, pero
+        /// tampoco es gratis.
+        /// </summary>
+        float ShotsPerSecond()
+        {
+            float rate = shotsPerSecond;
+
+            if (player != null && player.IsDefending)
+                rate *= Mathf.Clamp(player.DefendFireRate, 0.1f, 1f);
+
+            return rate;
         }
 
         void Shoot()

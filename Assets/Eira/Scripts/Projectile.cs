@@ -29,6 +29,7 @@ namespace EiraGame
         Transform owner;
         Transform ownerRoot;
         Light glow;
+        bool isEnemy = false;
 
         readonly RaycastHit[] sweep = new RaycastHit[24];
 
@@ -37,7 +38,8 @@ namespace EiraGame
             Vector3 direction,
             float damage,
             Transform owner,
-            Color color)
+            Color color,
+            bool isEnemy = false)
         {
             var go = new GameObject("Projectile");
             go.transform.position = position;
@@ -47,6 +49,7 @@ namespace EiraGame
             p.owner = owner;
             p.ownerRoot = ResolveOwnerRoot(owner);
             p.velocity = direction.normalized * Speed;
+            p.isEnemy = isEnemy;
 
             var orb = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             orb.name = "Visual";
@@ -168,26 +171,44 @@ namespace EiraGame
 
             if (hasHit)
             {
-                Collider target = FindDrone(closest.collider, closest.distance);
-
-                if (target != null)
+                if (isEnemy)
                 {
-                    DroneController drone =
-                        target.GetComponent<DroneController>();
-
-                    if (drone != null)
+                    Collider playerCol = FindPlayer(closest.collider, closest.distance);
+                    if (playerCol != null)
                     {
-                        CombatFX.Impact(closest.point, Color.white);
+                        PlayerController pc = playerCol.GetComponentInParent<PlayerController>();
+                        if (pc != null)
+                        {
+                            CombatFX.Impact(closest.point, Color.red);
+                            pc.TakeDamage(damage, owner.gameObject);
+                            Expire();
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    Collider target = FindDrone(closest.collider, closest.distance);
 
-                        // El arma de Eira derriba un androide de un disparo.
-                        // El damage del Inspector (12) se queda corto frente a
-                        // la vida del dron (40), asi que el impacto se lleva
-                        // toda la vida que le quede: un disparo, un dron.
-                        float lethal = Mathf.Max(damage, drone.maxHealth);
+                    if (target != null)
+                    {
+                        DroneController drone =
+                            target.GetComponent<DroneController>();
 
-                        drone.OnShot(lethal, velocity.normalized, owner);
-                        Expire();
-                        return;
+                        if (drone != null)
+                        {
+                            CombatFX.Impact(closest.point, Color.white);
+
+                            // El arma de Eira derriba un androide de un disparo.
+                            // El damage del Inspector (12) se queda corto frente a
+                            // la vida del dron (40), asi que el impacto se lleva
+                            // toda la vida que le quede: un disparo, un dron.
+                            float lethal = Mathf.Max(damage, drone.maxHealth);
+
+                            drone.OnShot(lethal, velocity.normalized, owner);
+                            Expire();
+                            return;
+                        }
                     }
                 }
 
@@ -235,6 +256,42 @@ namespace EiraGame
                 float dist = (overlaps[i].bounds.center - transform.position).magnitude;
 
                 // El borde cercano del dron tiene que caer antes que el muro.
+                if (dist - WidestAxis(overlaps[i].bounds) > wallDistance)
+                    continue;
+
+                if (dist < bestDist)
+                {
+                    bestDist = dist;
+                    best = overlaps[i];
+                }
+            }
+
+            return best;
+        }
+
+        Collider FindPlayer(Collider first, float wallDistance)
+        {
+            if (first != null && first.GetComponentInParent<PlayerController>() != null)
+                return first;
+
+            var overlaps = Physics.OverlapSphere(
+                transform.position + velocity.normalized * 0.5f,
+                Radius + 0.45f,
+                ~0,
+                QueryTriggerInteraction.Ignore);
+
+            Collider best = null;
+            float bestDist = float.MaxValue;
+
+            for (int i = 0; i < overlaps.Length; i++)
+            {
+                var pc = overlaps[i].GetComponentInParent<PlayerController>();
+
+                if (pc == null || BelongsToOwner(pc.transform))
+                    continue;
+
+                float dist = (overlaps[i].bounds.center - transform.position).magnitude;
+
                 if (dist - WidestAxis(overlaps[i].bounds) > wallDistance)
                     continue;
 

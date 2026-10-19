@@ -1643,12 +1643,12 @@ MonoBehaviour:
   patrolNodes:
   - {x: 55, y: 1.7, z: -8}
   - {x: 63, y: 1.7, z: -8}
-  detectRadius: 8
-  attackRange: 2.8
+  detectRadius: 9
+  attackRange: 2.6
   patrolSpeed: 2.2
-  chaseSpeed: 5.2
-  attackDamage: 12
-  attackPeriod: 1.1
+  chaseSpeed: 4.8
+  attackDamage: 10
+  attackPeriod: 1.8
   eyeLight: {fileID: 1747609573}
   eyeLight2: {fileID: 1550904837}
 --- !u!1 &394005672
@@ -2337,12 +2337,12 @@ MonoBehaviour:
   patrolNodes:
   - {x: 32, y: 2, z: 5}
   - {x: 40, y: 2, z: 5}
-  detectRadius: 8
-  attackRange: 2.8
+  detectRadius: 9
+  attackRange: 2.6
   patrolSpeed: 2.2
-  chaseSpeed: 5.2
-  attackDamage: 12
-  attackPeriod: 1.1
+  chaseSpeed: 4.8
+  attackDamage: 10
+  attackPeriod: 1.8
   eyeLight: {fileID: 2057638638}
   eyeLight2: {fileID: 105421107}
 --- !u!1 &541650693
@@ -3745,12 +3745,12 @@ MonoBehaviour:
   patrolNodes:
   - {x: 32, y: 2, z: -5}
   - {x: 40, y: 2, z: -5}
-  detectRadius: 8
-  attackRange: 2.8
+  detectRadius: 9
+  attackRange: 2.6
   patrolSpeed: 2.2
-  chaseSpeed: 5.2
-  attackDamage: 12
-  attackPeriod: 1.1
+  chaseSpeed: 4.8
+  attackDamage: 10
+  attackPeriod: 1.8
   eyeLight: {fileID: 920861192}
   eyeLight2: {fileID: 692769819}
 --- !u!1 &732047749
@@ -7568,8 +7568,8 @@ MonoBehaviour:
   heartRegen: 1.6
   heartDanger: 15
   pulseInterval: 0.35
-  defendDrainPerSecond: 45
-  defendHitCost: 8
+  defendDrainPerSecond: 22
+  defendHitCost: 5
   guardBreakTime: 1.2
   visual: {fileID: 238131164}
   animator: {fileID: 0}
@@ -7586,7 +7586,7 @@ MonoBehaviour:
   unstickDelay: 0.35
   depenetrationRange: 0.6
   groundWatchdogDistance: 12
-  fallLimit: -8
+  fallLimit: -14
   camera: {fileID: 0}
   weapon: {fileID: 0}
   isGrounded: 0

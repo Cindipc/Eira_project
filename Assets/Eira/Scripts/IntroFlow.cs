@@ -386,7 +386,7 @@ namespace EiraGame
                 new Vector2(0.5f, 0.2f),
                 () =>
                     SceneManager.LoadScene(
-                        EiraConst.Level1Scene
+                        EiraConst.PresentationScene
                     ),
                 font
             );

@@ -4,13 +4,17 @@ namespace EiraGame
 {
     // Jefe del Nivel 1: la Máquina Guardiana. Bloquea la salida del laboratorio.
     // Para desactivarla, Eira debe cargar 3 terminales con su habilidad mientras esquiva sus ataques.
-    public class GuardianBoss : MonoBehaviour
+    public class GuardianBoss : MonoBehaviour, IDamageable
     {
         public int neededTerminals = 3;
         public float moveSpeed = 1.4f;
         public float attackDamage = 22f;
         public float attackRange = 3.5f;
         public float attackPeriod = 2.6f;
+
+        [Tooltip("Segundos de aviso (la luz roja se intensifica) antes de que el golpe conecte.")]
+        public float attackWindup = 0.85f;
+
         public DoorControl exitDoor;
         public Transform core;
         public Transform eye;
@@ -23,11 +27,13 @@ namespace EiraGame
         int terminalsCharged;
         float stunTimer;
         float attackTimer;
+        float windupTimer;
         bool active;
         bool defeated;
         Vector3 startPos;
 
         public bool IsActive => active;
+        public bool IsAlive => !defeated;
 
         void Start()
         {
@@ -45,6 +51,7 @@ namespace EiraGame
             if (stunTimer > 0f)
             {
                 stunTimer -= Time.deltaTime;
+                windupTimer = 0f;
                 Flash(true);
                 return;
             }
@@ -63,14 +70,76 @@ namespace EiraGame
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir, Vector3.up), 4f * Time.deltaTime);
             }
 
-            attackTimer -= Time.deltaTime;
-            if (dist < attackRange && attackTimer <= 0f)
+            // Ataque con aviso: primero carga la luz roja, luego golpea.
+            if (attackTimer > 0f)
+                attackTimer -= Time.deltaTime;
+
+            bool inRange = dist < attackRange;
+
+            if (!inRange || windupTimer <= 0f && attackTimer > 0f)
             {
+                windupTimer = Mathf.Max(0f, windupTimer - Time.deltaTime * 2f);
+                return;
+            }
+
+            if (windupTimer <= 0f)
+                windupTimer = 0.0001f;
+
+            windupTimer += Time.deltaTime;
+            float t = Mathf.Clamp01(windupTimer / Mathf.Max(0.05f, attackWindup));
+            if (redLight != null) redLight.intensity = Mathf.Lerp(4f, 12f, t);
+
+            if (windupTimer >= attackWindup)
+            {
+                windupTimer = 0f;
                 attackTimer = attackPeriod;
-                player.TakeDamage(attackDamage, gameObject);
+                if (redLight != null) redLight.intensity = 4f;
+
+                // Boss attack: can be a physical hit or a shockwave based on distance
+                if (dist > 2f)
+                {
+                    // Ranged attack: shockwave projectile
+                    Projectile.Fire(
+                        transform.position + Vector3.up * 2f,
+                        (player.transform.position - transform.position).normalized,
+                        attackDamage,
+                        transform,
+                        Color.red,
+                        true // isEnemy
+                    );
+                }
+                else
+                {
+                    player.TakeDamage(attackDamage, gameObject);
+                }
             }
 
             if (core != null) core.Rotate(0f, 90f * Time.deltaTime, 0f);
+        }
+
+        /// <summary>
+        /// El jefe no tiene barra de vida: se derrota cargando los terminales.
+        /// Pero un golpe devuelto (bloqueo o pulso) lo aturde un instante, que
+        /// es lo que da la ventana para cargar el siguiente terminal.
+        /// </summary>
+        public bool TakeHit(float amount, Vector3 point, Vector3 direction, GameObject source)
+        {
+            if (defeated || !active)
+                return false;
+
+            stunTimer = Mathf.Max(stunTimer, 0.6f);
+            windupTimer = 0f;
+            CombatFX.Impact(point, new Color(0.5f, 0.95f, 1f));
+            return false;
+        }
+
+        public void Stun(float duration)
+        {
+            if (defeated || !active || duration <= 0f)
+                return;
+
+            stunTimer = Mathf.Max(stunTimer, duration);
+            windupTimer = 0f;
         }
 
         void Flash(bool tint)
