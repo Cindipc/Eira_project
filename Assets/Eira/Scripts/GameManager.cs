@@ -12,7 +12,7 @@ namespace EiraGame
 
         public int Score { get; private set; }
         public int Lives { get; private set; }
-        public int MaxLives => EiraConst.MaxLives;
+        public int MaxLives { get; private set; } = EiraConst.MaxLives;
         public int InfoCollectedCount { get; private set; }
         public GameState State { get; private set; }
         public bool BossDefeated { get; private set; }
@@ -50,7 +50,7 @@ namespace EiraGame
             GameEvents.ResetAll();
 
             State = GameState.Playing;
-            Lives = EiraConst.MaxLives;
+            Lives = MaxLives;
             Score = 0;
             InfoCollectedCount = 0;
 
@@ -373,6 +373,59 @@ namespace EiraGame
             if (hud != null) hud.ShowWin(Score, Lives);
         }
 
+        /// <summary>
+        /// Victoria del Nivel 2: llegar al refugio rebelde con el Nucleo Central
+        /// encontrado. Se separa de <see cref="OnExitReached"/> porque Kael no
+        /// se puede derrotar, asi que <see cref="BossDefeated"/> nunca cambia.
+        /// </summary>
+        public void WinLevel2()
+        {
+            if (State != GameState.Playing) return;
+
+            State = GameState.Won;
+            CompleteMission(Level2Missions.MRefuge);
+            AddScore(Level2Points.LevelComplete);
+            AudioFX.Win();
+            if (hud != null) hud.ShowWin(Score, Lives);
+        }
+
+        /// <summary>Cambia el maximo de vidas (el Nivel 3 empieza con 5).</summary>
+        public void SetMaxLives(int n)
+        {
+            MaxLives = Mathf.Max(1, n);
+            Lives = MaxLives;
+            if (hud != null)
+            {
+                hud.SetHeartCount(MaxLives);
+                hud.RefreshLives();
+            }
+        }
+
+        /// <summary>
+        /// Nivel 3 completado: Eira libera el Nucleo y elige el destino de
+        /// humanos y androides (libertad).
+        /// </summary>
+        public void WinLevel3()
+        {
+            if (State != GameState.Playing) return;
+
+            State = GameState.Won;
+            CompleteMission(Level3Missions.MChooseDestiny);
+            AudioFX.Win();
+            if (hud != null) hud.ShowWin(Score, Lives);
+        }
+
+        /// <summary>Kael ha capturado a Eira: se pierde el nivel.</summary>
+        public void OnCapturedByKael()
+        {
+            if (State != GameState.Playing) return;
+
+            GameEvents.SetBossBar(0f);
+            State = GameState.GameOver;
+            AudioFX.Lose();
+            if (hud != null) hud.ShowGameOver(Score);
+        }
+
         public void LoadNextLevel()
         {
             string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
@@ -386,7 +439,7 @@ namespace EiraGame
         private string GetNextLevelScene(string currentScene)
         {
             if (currentScene == EiraConst.Level1Scene) return EiraConst.Level2Scene;
-            if (currentScene == EiraConst.Level2Scene) return EiraConst.Level3Scene;
+            // El Nivel 3 se juega dentro de Level2Scene (interior del Nucleo).
             return "";
         }
 
@@ -401,6 +454,15 @@ namespace EiraGame
         public void CompleteMission(int id)
         {
             missionsDone[id] = true;
+            if (hud != null) hud.RefreshMissions();
+        }
+
+        /// <summary>Reinicia la lista de misiones (al entrar al interior del Nivel 3).</summary>
+        public void ResetMissions()
+        {
+            for (int i = 0; i < missionsDone.Length; i++)
+                missionsDone[i] = false;
+            CurrentMission = 0;
             if (hud != null) hud.RefreshMissions();
         }
     }

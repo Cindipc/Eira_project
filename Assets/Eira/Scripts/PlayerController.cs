@@ -1943,6 +1943,31 @@ namespace EiraGame
                 }
             }
 
+            // El pulso tambien repele a los androides militares del Nivel 2.
+            AndroidSoldier[] androids =
+                FindObjectsByType<AndroidSoldier>(FindObjectsInactive.Exclude);
+
+            foreach (AndroidSoldier android in androids)
+            {
+                if (android == null || !android.IsAlive)
+                    continue;
+
+                if (Vector3.Distance(
+                    pulseCenter,
+                    android.transform.position
+                ) <= abilityRadius)
+                {
+                    android.TakeHit(
+                        abilityDamage,
+                        android.transform.position,
+                        transform.forward,
+                        gameObject
+                    );
+
+                    repelled = true;
+                }
+            }
+
             if (repelled)
             {
                 if (GameManager.Instance != null)

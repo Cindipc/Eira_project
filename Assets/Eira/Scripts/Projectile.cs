@@ -200,12 +200,27 @@ namespace EiraGame
                             CombatFX.Impact(closest.point, Color.white);
 
                             // El arma de Eira derriba un androide de un disparo.
-                            // El damage del Inspector (12) se queda corto frente a
-                            // la vida del dron (40), asi que el impacto se lleva
+                            // El damage del Inspector (12) se queda corto frente
+                            // a la vida del dron (40), asi que el impacto se lleva
                             // toda la vida que le quede: un disparo, un dron.
                             float lethal = Mathf.Max(damage, drone.maxHealth);
 
                             drone.OnShot(lethal, velocity.normalized, owner);
+                            Expire();
+                            return;
+                        }
+                    }
+
+                    // Enemigos genericos del Nivel 2 (androides militares, etc.).
+                    // Comparten el contrato IDamageable con el resto del combate.
+                    Collider genericCol = FindDamageable(closest.collider, closest.distance);
+                    if (genericCol != null)
+                    {
+                        IDamageable generic = genericCol.GetComponentInParent<IDamageable>();
+                        if (generic != null)
+                        {
+                            CombatFX.Impact(closest.point, new Color(1f, 0.6f, 0.3f));
+                            generic.TakeHit(damage, closest.point, velocity.normalized, owner.gameObject);
                             Expire();
                             return;
                         }
@@ -256,6 +271,55 @@ namespace EiraGame
                 float dist = (overlaps[i].bounds.center - transform.position).magnitude;
 
                 // El borde cercano del dron tiene que caer antes que el muro.
+                if (dist - WidestAxis(overlaps[i].bounds) > wallDistance)
+                    continue;
+
+                if (dist < bestDist)
+                {
+                    bestDist = dist;
+                    best = overlaps[i];
+                }
+            }
+
+            return best;
+        }
+
+        /// <summary>
+        /// Busca un enemigo generico (IDamageable) que no sea ya un dron. Se usa
+        /// para los androides y otros enemigos del Nivel 2.
+        /// </summary>
+        Collider FindDamageable(Collider first, float wallDistance)
+        {
+            if (first != null &&
+                first.GetComponentInParent<IDamageable>() != null &&
+                first.GetComponentInParent<DroneController>() == null &&
+                first.GetComponentInParent<PlayerController>() == null)
+                return first;
+
+            var overlaps = Physics.OverlapSphere(
+                transform.position + velocity.normalized * 0.5f,
+                Radius + 0.45f,
+                ~0,
+                QueryTriggerInteraction.Ignore);
+
+            Collider best = null;
+            float bestDist = float.MaxValue;
+
+            for (int i = 0; i < overlaps.Length; i++)
+            {
+                var d = overlaps[i].GetComponentInParent<IDamageable>();
+
+                if (d == null || BelongsToOwner(overlaps[i].transform))
+                    continue;
+
+                if (overlaps[i].GetComponentInParent<DroneController>() != null)
+                    continue;
+
+                if (overlaps[i].GetComponentInParent<PlayerController>() != null)
+                    continue;
+
+                float dist = (overlaps[i].bounds.center - transform.position).magnitude;
+
                 if (dist - WidestAxis(overlaps[i].bounds) > wallDistance)
                     continue;
 

@@ -13,6 +13,9 @@ namespace EiraGame
     {
         static Font cachedFont;
 
+        // Nombres de mision por nivel. Si es null se usan los del Nivel 1.
+        public static string[] MissionNames;
+
         Text scoreText, objectiveText, promptText, logText, subtitleText;
         Text missionHeader, missionLines, controlsText;
         GameObject missionsPanel, bossObj, damageObj, winPanel, overPanel, controlsObj, pausePanel;
@@ -28,6 +31,7 @@ namespace EiraGame
         GameObject[] heartContainers;
         Image[] heartFills;
         Text heartsLabel;
+        Transform hudRoot;
 
         // Sprites de la mira generados por código: el proyecto no tiene
         // sprite sheet, y una Image sin sprite es un rectángulo opaco que
@@ -367,32 +371,7 @@ namespace EiraGame
             
             heartsLabel = MakeTextScaled(root, "VIDAS", 24, TextAnchor.MiddleLeft, new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -70), new Vector2(200, 45), new Color(0.8f, 0.9f, 0.8f));
             
-            heartContainers = new GameObject[EiraConst.MaxLives];
-            heartFills = new Image[EiraConst.MaxLives];
-            for (int i = 0; i < EiraConst.MaxLives; i++)
-            {
-                var container = new GameObject("Heart_" + i, typeof(RectTransform), typeof(Image));
-                container.transform.SetParent(root, false);
-                var rt = container.GetComponent<RectTransform>();
-                rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(0, 1);
-                rt.anchoredPosition = new Vector2(110 + (i * 60), -70);
-                rt.sizeDelta = new Vector2(45, 45);
-                container.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.12f, 0.8f);
-                
-                var heartFillObj = new GameObject("Fill_" + i, typeof(Image));
-                heartFillObj.transform.SetParent(container.transform, false);
-                var fillRt = heartFillObj.GetComponent<RectTransform>();
-                fillRt.anchorMin = Vector2.zero; fillRt.anchorMax = Vector2.one;
-                fillRt.offsetMin = new Vector2(2, 2); fillRt.offsetMax = new Vector2(-2, -2);
-                var fillImg = heartFillObj.GetComponent<Image>();
-                fillImg.type = Image.Type.Filled;
-                fillImg.fillMethod = Image.FillMethod.Radial360;
-                fillImg.fillOrigin = 0;
-                fillImg.color = new Color(1f, 0.35f, 0.35f);
-                
-                heartContainers[i] = container;
-                heartFills[i] = fillImg;
-            }
+            BuildHearts(root, HeartCount());
             
             // --- barras de vida y corazón (superior derecha) ---
             BuildBar(root, "HealthBar", new Color(0.2f, 0.7f, 0.4f), out bossFill, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-380, -20), new Vector2(360, 34));
@@ -869,9 +848,70 @@ namespace EiraGame
             damageImg.color = new Color(c.r, c.g, c.b, strength);
         }
 
+        int HeartCount()
+        {
+            return GameManager.Instance != null ? GameManager.Instance.MaxLives : EiraConst.MaxLives;
+        }
+
+        void BuildHearts(Transform root, int count)
+        {
+            hudRoot = root;
+            count = Mathf.Max(1, count);
+
+            if (heartContainers != null)
+            {
+                for (int i = 0; i < heartContainers.Length; i++)
+                    if (heartContainers[i] != null)
+                        Destroy(heartContainers[i]);
+            }
+
+            heartContainers = new GameObject[count];
+            heartFills = new Image[count];
+            for (int i = 0; i < count; i++)
+            {
+                var container = new GameObject("Heart_" + i, typeof(RectTransform), typeof(Image));
+                container.transform.SetParent(root, false);
+                var rt = container.GetComponent<RectTransform>();
+                rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(0, 1);
+                rt.anchoredPosition = new Vector2(110 + (i * 60), -70);
+                rt.sizeDelta = new Vector2(45, 45);
+                container.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.12f, 0.8f);
+
+                var heartFillObj = new GameObject("Fill_" + i, typeof(Image));
+                heartFillObj.transform.SetParent(container.transform, false);
+                var fillRt = heartFillObj.GetComponent<RectTransform>();
+                fillRt.anchorMin = Vector2.zero; fillRt.anchorMax = Vector2.one;
+                fillRt.offsetMin = new Vector2(2, 2); fillRt.offsetMax = new Vector2(-2, -2);
+                var fillImg = heartFillObj.GetComponent<Image>();
+                fillImg.type = Image.Type.Filled;
+                fillImg.fillMethod = Image.FillMethod.Radial360;
+                fillImg.fillOrigin = 0;
+                fillImg.color = new Color(1f, 0.35f, 0.35f);
+
+                heartContainers[i] = container;
+                heartFills[i] = fillImg;
+            }
+        }
+
+        /// <summary>Reconstruye la fila de corazones para un nuevo maximo de vidas.</summary>
+        public void SetHeartCount(int count)
+        {
+            if (hudRoot == null) return;
+            if (heartContainers != null && heartContainers.Length == count) return;
+            BuildHearts(hudRoot, count);
+            RefreshLives();
+        }
+
         public void RefreshLives()
         {
             if (heartContainers == null || GameManager.Instance == null) return;
+
+            if (heartContainers.Length != GameManager.Instance.MaxLives)
+            {
+                SetHeartCount(GameManager.Instance.MaxLives);
+                return;
+            }
+
             int lives = GameManager.Instance.Lives;
             for (int i = 0; i < heartContainers.Length; i++)
             {
@@ -916,10 +956,11 @@ namespace EiraGame
             if (missionLines == null || GameManager.Instance == null) return;
             missionsPanel.SetActive(true);
             string s = "";
-            for (int i = 0; i < Missions.Names.Length; i++)
+            string[] names = MissionNames != null ? MissionNames : Missions.Names;
+            for (int i = 0; i < names.Length; i++)
             {
                 bool done = GameManager.Instance.IsMissionDone(i);
-                s += (done ? "✔ " : "○ ") + Missions.Names[i] + "\n";
+                s += (done ? "[X] " : "[ ] ") + names[i] + "\n";
             }
             missionLines.text = s;
             missionsPanel.SetActive(false);
